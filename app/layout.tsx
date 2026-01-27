@@ -1,17 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import Header from "@/components/custom/header";
+import Footer from "@/components/custom/footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-poppins",
+  weight: [
+    "100",
+    "200",
+    "300",
+    "400",
+    "500",
+    "600",
+    "700",
+    "800",
+    "900",
+  ],
 });
 
 export const metadata: Metadata = {
@@ -26,20 +33,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-dark relative min-h-screen`}>
-        <div className="absolute top-0 left-1/2 transform -translate-1/2">
-          <Image src="/images/tof-dots.png" alt="Logo" width={1300} height={1300} className="bg-transparent" />
+      <body className={`${poppins.variable} antialiased bg-dark relative min-h-screen`}>
+        <div className="absolute top-0 left-1/2 transform -translate-1/2 w-full">
+          <Image src="/images/tof-dots.png" alt="Logo" width={1300} height={1300} className="bg-transparent w-full" />
         </div>
         <div className="absolute w-1/2 aspect-square top-0 left-1/2 transform -translate-x-1/3 -translate-y-1/2 bg-neon-green/5 rounded-full blur-3xl"></div>
         <main className="relative">
-          <header className="fixed top-0 left-0 w-full">
-            <Image src="/images/tof-logo.png" alt="Logo" width={669} height={192} className="w-40" />
-            <div>
-              <Button>Log In</Button>
-              <Button>Start Trading NOW</Button>
+          <Header />
+          <main className="p-6">
+            <div className="w-full max-w-7xl mx-auto">
+              {children}
             </div>
-          </header>
-          {children}
+          </main>
+          <Footer />
         </main>
       </body>
     </html>
