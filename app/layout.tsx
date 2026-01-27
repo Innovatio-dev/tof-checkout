@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Image from "next/image";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,10 +25,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-dark relative min-h-screen`}>
+        <div className="absolute top-0 left-1/2 transform -translate-1/2">
+          <Image src="/images/tof-dots.png" alt="Logo" width={1300} height={1300} className="bg-transparent" />
+        </div>
+        <div className="absolute w-1/2 aspect-square top-0 left-1/2 transform -translate-x-1/3 -translate-y-1/2 bg-neon-green/5 rounded-full blur-3xl"></div>
+        <main>
+          {children}
+        </main>
       </body>
     </html>
   );
