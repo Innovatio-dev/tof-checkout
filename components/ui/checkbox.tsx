@@ -21,7 +21,7 @@ function Checkbox({
         "data-[state=checked]:bg-neon-green/10",
         "data-[state=checked]:text-primary-foreground",
         "data-[state=checked]:border-neon-green",
-        "data-[state=checked]:shadow-[inset_0_0_7px_2px_rgba(123,252,127,0.4)]",
+        "data-[state=checked]:inset-glow",
         className
       )}
       {...props}
