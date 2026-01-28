@@ -75,9 +75,9 @@ const PaymentRadioItem = ({ id, value, title, subtitle, availableMethods }: Paym
             <Check className="payment-check h-4 w-4 text-white opacity-0" />
           </div>
 
-          <div className="flex flex-col gap-1 leading-none">
-            <div className="text-xl font-semibold text-white">{title}</div>
-            {subtitle ? <div className="text-md text-white/60">{subtitle}</div> : null}
+          <div className="flex flex-col gap-1">
+            <div className="text-lg font-semibold text-white leading-none">{title}</div>
+            {subtitle ? <div className="text-sm text-white/60 leading-none">{subtitle}</div> : null}
           </div>
         </div>
 
