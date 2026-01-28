@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import FormSection from "@/components/custom/form-section";
 import TofCheckbox from "@/components/custom/tof-checkbox";
 import { Button } from "@/components/ui/button";
-import { Lock, LockIcon, LockKeyholeIcon, MinusIcon, PlusIcon } from "lucide-react";
+import { ArrowRightIcon, Lock, LockIcon, LockKeyholeIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
  import { useMemo, useState } from "react";
 
@@ -145,9 +145,9 @@ export default function Home() {
               <div>Account ($100K)</div>
               <div className="flex items-center gap-8">
                 <div className="flex items-center gap-2">
-                  <Button size={'icon'}><MinusIcon /></Button>
-                  <span>1</span>
-                  <Button size={'icon'}><PlusIcon /></Button>
+                  <Button variant={'outline'} size={'icon'}><MinusIcon /></Button>
+                  <span className="min-w-6 text-center font-bold">1</span>
+                  <Button variant={'outline'} size={'icon'}><PlusIcon /></Button>
                 </div>
                 <div>$100,000</div>
               </div>
@@ -167,30 +167,40 @@ export default function Home() {
 
             <Separator className="bg-white/0" />
 
-            <div className="flex flex-col gap-6">
-              <h4 className="text-xl font-semibold">Choose payment method</h4>
-              <RadioGroup defaultValue="credit-card" className="flex flex-col gap-4">
-                <PaymentRadioItem
-                  id="credit-card"
-                  value="credit-card"
-                  title="Secure checkout"
-                  subtitle="Using card or crypto"
-                  availableMethods="visa, amex, mastercard, crypto, tether"
-                />
-                <PaymentRadioItem
-                  id="paypal"
-                  value="paypal"
-                  title="Pay with Google or Apple Pay"
-                  availableMethods="apple pay, google pay"
-                />
-              </RadioGroup>
+            <div className="flex flex-col gap-10">
+              <div className="flex flex-col gap-6">
+                <h4 className="text-xl font-semibold">Choose payment method</h4>
+                <RadioGroup defaultValue="credit-card" className="flex flex-col gap-4">
+                  <PaymentRadioItem
+                    id="credit-card"
+                    value="credit-card"
+                    title="Secure checkout"
+                    subtitle="Using card or crypto"
+                    availableMethods="visa, amex, mastercard, crypto, tether"
+                  />
+                  <PaymentRadioItem
+                    id="paypal"
+                    value="paypal"
+                    title="Pay with Google or Apple Pay"
+                    availableMethods="apple pay, google pay"
+                  />
+                </RadioGroup>
+              </div>
+  
               <TofCheckbox id="terms" name="terms" label="Agree to our Privacy Policy and Terms and Conditions *" />
-            </div>
-
-            <Button size={'lg'} className="w-full" variant={'primary'}>Place order</Button>
-            <div className="flex items-center justify-center gap-2 text-white/50 text-sm">
-              <LockIcon className="w-4 h-4" />
-              All payments are secured and encrypted
+  
+              <div className="flex flex-col gap-4">
+                <Button size={'lg'} className="w-full font-bold" variant={'primary'}>
+                  Place order
+                  <span className="bg-black text-white py-1 px-3 rounded-full">
+                    <ArrowRightIcon />
+                  </span>
+                </Button>
+                <div className="flex items-center justify-center gap-2 text-white/50 text-sm">
+                  <LockIcon className="w-4 h-4" />
+                  All payments are secured and encrypted
+                </div>
+              </div>
             </div>
           </div>
         </div>
