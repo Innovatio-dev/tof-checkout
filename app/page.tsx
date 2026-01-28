@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, Lock, LockIcon, LockKeyholeIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
  import { useMemo, useState } from "react";
+import CountryCombobox from "@/components/custom/country-combobox";
 
 export default function Home() {
   const [accountType, setAccountType] = useState("instant-sim-funded");
@@ -108,7 +109,9 @@ export default function Home() {
               <Input placeholder="First name" className="col-span-6" />
               <Input placeholder="Last name" className="col-span-4" />
 
-              <Input placeholder="Select country" className="col-span-10" />
+              <div className="col-span-10">
+                <CountryCombobox onChange={(value) => console.log(value)} />
+              </div>
               <Input placeholder="House number and street name" className="col-span-10" />
               <Input placeholder="Apartment, suite, etc. (optional)" className="col-span-10" />
               <Input placeholder="City" className="col-span-5" />
