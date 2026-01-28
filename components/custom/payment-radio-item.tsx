@@ -35,7 +35,7 @@ const MethodTile = ({ method }: { method: string }) => {
 
   if (logo) {
     return (
-      <Image src={logo.src} alt={method.trim()} width={logo.w} height={logo.h} className="h-7 w-auto" />
+      <Image src={logo.src} alt={method.trim()} width={logo.w} height={logo.h} className="lg:h-7 md:h-5 h-7 w-auto" />
     );
   }
 };
@@ -52,7 +52,7 @@ const PaymentRadioItem = ({ id, value, title, subtitle, availableMethods }: Paym
       <label
         htmlFor={id}
         className={cn(
-          "flex items-center justify-between gap-6 rounded-2xl border p-6 cursor-pointer min-h-28",
+          "flex flex-col md:flex-row md:items-center md:justify-between md:gap-6 gap-4 rounded-2xl border md:p-6 p-5 cursor-pointer min-h-28",
           "border-white/10 bg-white/8",
           "transition-colors",
           "hover:border-white/30",
@@ -65,7 +65,7 @@ const PaymentRadioItem = ({ id, value, title, subtitle, availableMethods }: Paym
           "peer-data-[state=checked]:[&_.payment-check]:opacity-100",
         )}
       >
-        <div className="flex items-center gap-5">
+        <div className="flex items-center md:gap-5 gap-3">
           <div
             className={cn(
               "payment-indicator relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border",
@@ -76,12 +76,12 @@ const PaymentRadioItem = ({ id, value, title, subtitle, availableMethods }: Paym
           </div>
 
           <div className="flex flex-col gap-1">
-            <div className="text-lg font-semibold text-white leading-none">{title}</div>
+            <div className="md:text-lg text-base font-semibold text-white leading-none">{title}</div>
             {subtitle ? <div className="text-sm text-white/60 leading-none">{subtitle}</div> : null}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap lg:flex-nowrap items-center gap-2">
           {methods.map((m) => (
             <MethodTile key={m} method={m} />
           ))}
