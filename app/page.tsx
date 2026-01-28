@@ -65,6 +65,7 @@ export default function Home() {
       </div>
 
       <div className="flex gap-16">
+        {/* MARK: Account Information */}
         <div className="flex flex-col gap-16 w-1/2"> {/* Fist Column */}
           {/* #1 Confirm account information */}
           <div className="flex flex-col gap-4">
@@ -123,6 +124,7 @@ export default function Home() {
           </div>
         </div>
 
+        {/* MARK: Order Summary */}
         <div className="w-1/2"> {/* Second Column */}
           <div className="flex flex-col gap-4 bg-white/8 border border-white/10 rounded-2xl p-6">
             <h4 className="text-xl font-semibold">Top One Futures Account</h4>
@@ -186,14 +188,14 @@ export default function Home() {
                   />
                 </RadioGroup>
               </div>
-  
+
               <TofCheckbox id="terms" name="terms" label="Agree to our Privacy Policy and Terms and Conditions *" />
-  
+
               <div className="flex flex-col gap-4">
-                <Button size={'lg'} className="w-full font-bold" variant={'primary'}>
+                <Button size={'lg'} className="w-full font-bold h-12" variant={'primary'}>
                   Place order
                   <span className="bg-black text-white py-1 px-3 rounded-full">
-                    <ArrowRightIcon />
+                    <ArrowRightIcon className="tof-arrow-float-x -translate-y-px" />
                   </span>
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-white/50 text-sm">
