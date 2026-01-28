@@ -4,7 +4,7 @@ import { Button } from "../ui/button"
 const Footer = () => {
   return (
     <footer className="w-full py-16 px-8">
-      <div className="flex flex-col gap-16 justify-between max-w-7xl mx-auto">
+      <div className="flex flex-col gap-16 justify-between max-w-6xl mx-auto">
         <Image src="/images/tof-logo.png" alt="Logo" width={669} height={192} className="w-40" />
         <div className="text-white/60 text-sm flex flex-col gap-2">
           <p>Disclaimer: All content and information provided on this website are for educational and informational purposes only, specifically relating to trading in financial markets. They should not be construed as specific investment recommendations, endorsements, or solicitations to buy or sell securities or any other investment instruments. It&apos;s emphasized that trading in financial markets carries inherent risks, and potential traders are advised not to invest more than they can afford to lose.</p>

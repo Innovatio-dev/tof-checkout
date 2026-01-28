@@ -41,7 +41,7 @@ export default function RootLayout({
         <main className="relative">
           <Header />
           <main className="p-6">
-            <div className="w-full max-w-7xl mx-auto">
+            <div className="w-full max-w-6xl mx-auto">
               {children}
             </div>
           </main>
