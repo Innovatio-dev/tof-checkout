@@ -6,13 +6,13 @@ interface SnappFlagProps {
   className?: string
 }
 
-const SnappFlag = ({ code, size = "m", className }: SnappFlagProps) => {
+const SnappFlag = ({ code, size = "l", className }: SnappFlagProps) => {
   return (
     <Flag
       code={code.toUpperCase()}
       size={size}
-      hasBorder={false}
-      className={`rounded-[3px] overflow-clip border border-gray-200 ${className}`}
+      hasBorder={true}
+      className={`rounded-[5px] overflow-clip ${className}`}
       gradient="real-linear"
     />
   )

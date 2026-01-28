@@ -13,11 +13,14 @@ import { ArrowRightIcon, Lock, LockIcon, LockKeyholeIcon, MinusIcon, PlusIcon } 
 import { Separator } from "@/components/ui/separator";
  import { useMemo, useState } from "react";
 import CountryCombobox from "@/components/custom/country-combobox";
+import Link from "next/link";
+import SnappFlag from "@/components/custom/snapp-flag";
 
 export default function Home() {
   const [accountType, setAccountType] = useState("instant-sim-funded");
   const [accountSize, setAccountSize] = useState("50k");
   const [platform, setPlatform] = useState("tradovate-ninjatrader");
+  const [quantity, setQuantity] = useState(1);
 
   const accountTypeLabel = useMemo(() => {
     switch (accountType) {
@@ -62,12 +65,12 @@ export default function Home() {
     <div className="flex flex-col gap-16 font-sans text-white">
       <div>
         <h1 className="text-6xl font-semibold">Checkout</h1>
-        <p className="text-lg max-w-md">Please fill out the information and get funded. Existing customer? Log In before you checkout.</p>
+        <p className="text-lg max-w-md">Please fill out the information and get funded. Existing customer? <Link href="#" className="text-neon-yellow font-semibold">Log In</Link> before you checkout.</p>
       </div>
 
-      <div className="flex gap-16">
+      <div className="flex flex-col md:flex-row xl:gap-16 md:gap-8 gap-4">
         {/* MARK: Account Information */}
-        <div className="flex flex-col gap-16 w-1/2"> {/* Fist Column */}
+        <div className="flex flex-col gap-16 w-full md:w-1/2"> {/* Fist Column */}
           {/* #1 Confirm account information */}
           <div className="flex flex-col gap-4">
             <InstructionItem number={1} caption="Confirm trading account information" />
@@ -90,7 +93,7 @@ export default function Home() {
             </FormSection>
 
             <FormSection title="Platform">
-              <RadioGroup value={platform} onValueChange={setPlatform} className="grid grid-cols-2 gap-3">
+              <RadioGroup value={platform} onValueChange={setPlatform} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <TofRadioItem id="tradovate-ninjatrader" value="tradovate-ninjatrader" label="Tradovate / Ninjatrader"/>
               </RadioGroup>
             </FormSection>
@@ -128,7 +131,7 @@ export default function Home() {
         </div>
 
         {/* MARK: Order Summary */}
-        <div className="w-1/2"> {/* Second Column */}
+        <div className="flex flex-col gap-8 w-full md:w-1/2 lg:min-w-lg md:min-w-md md:shrink-0"> {/* Second Column */}
           <div className="flex flex-col gap-4 bg-white/8 border border-white/10 rounded-2xl p-6">
             <h4 className="text-xl font-semibold">Top One Futures Account</h4>
             <div className="flex flex-wrap gap-2 text-xs">
@@ -146,15 +149,30 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="flex justify-between items-center py-2">
-              <div>Account ($100K)</div>
-              <div className="flex items-center gap-8">
+            <div className="flex justify-between items-center py-2 select-none">
+              <div className="text-sm md:text-base">Account ($100K)</div>
+              <div className="flex items-center md:gap-8 gap-4">
                 <div className="flex items-center gap-2">
-                  <Button variant={'outline'} size={'icon'}><MinusIcon /></Button>
-                  <span className="min-w-6 text-center font-bold">1</span>
-                  <Button variant={'outline'} size={'icon'}><PlusIcon /></Button>
+                  <Button
+                    variant={'outline'}
+                    size={'icon'}
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    disabled={quantity <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    <MinusIcon />
+                  </Button>
+                  <span className="md:min-w-6 min-w-4 text-center font-bold">{quantity}</span>
+                  <Button
+                    variant={'outline'}
+                    size={'icon'}
+                    onClick={() => setQuantity((q) => q + 1)}
+                    aria-label="Increase quantity"
+                  >
+                    <PlusIcon />
+                  </Button>
                 </div>
-                <div>$100,000</div>
+                <div className="text-sm md:text-base">$100,000</div>
               </div>
             </div>
 
@@ -192,7 +210,7 @@ export default function Home() {
                 </RadioGroup>
               </div>
 
-              <TofCheckbox id="terms" name="terms" label="Agree to our Privacy Policy and Terms and Conditions *" />
+              <TofCheckbox id="terms" name="terms" label="Agree to our Privacy Policy and Terms and Conditions*" />
 
               <div className="flex flex-col gap-4">
                 <Button size={'lg'} className="w-full font-bold h-12" variant={'primary'}>
@@ -207,6 +225,15 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+          {/* MARK: IP Detection */}
+          <div className="flex justify-between bg-white/8 border border-white/10 rounded-2xl p-6 select-none">
+            <div className="flex items-center gap-3">
+              <SnappFlag code="US" className="h-auto w-7"/>
+              <div className="font-semibold">United States, USA</div>
+              <div className="flex text-muted-foreground font-semibold font-mono px-4">IP: 127.0.0.1</div>
+            </div>
+            <Link href="/support">Contact - <span className="text-neon-green">Support</span></Link>
           </div>
         </div>
       </div>
