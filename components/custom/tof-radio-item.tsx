@@ -14,7 +14,7 @@ const TofRadioItem = ({ id, value, label }: TofRadioItemProps) => {
       <label
         htmlFor={id}
         className={cn(
-          "flex h-11 items-center justify-center rounded-md border cursor-pointer",
+          "flex sm:h-11 h-14 items-center justify-center leading-tight! text-center rounded-md border cursor-pointer",
           "border-white/10 bg-white/10 px-4 text-sm font-semibold text-white/70",
           "transition-colors hover:border-white/40 hover:bg-white/15",
           "peer-data-[state=checked]:border-white",
