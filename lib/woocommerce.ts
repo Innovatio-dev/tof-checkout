@@ -1,52 +1,128 @@
-export type WooCommerceRequestOptions = RequestInit & {
+import "server-only";
+import WooCommerceRestApi, { type WooCommerceRestApiVersion } from "@woocommerce/woocommerce-rest-api";
+
+export type WooCommerceRequestOptions = {
   query?: Record<string, string | number | boolean | undefined>;
+  data?: Record<string, unknown> | Record<string, unknown>[];
 };
 
-const baseUrl = process.env.WC_BASE_URL?.replace(/\/$/, "");
-const apiPrefix = (process.env.WC_API_PREFIX ?? "/wp-json/wc/v3").replace(/\/$/, "");
-const consumerKey = process.env.WC_CONSUMER_KEY;
-const consumerSecret = process.env.WC_CONSUMER_SECRET;
+const siteUrl = process.env.WP_SITE_URL?.replace(/\/$/, "");
+const consumerKey = process.env.WP_CONSUMER_KEY;
+const consumerSecret = process.env.WP_CONSUMER_SECRET;
+const apiVersion = (process.env.WP_API_VERSION ?? "wc/v3") as WooCommerceRestApiVersion;
 
-export const isWooCommerceConfigured = () => {
-  return Boolean(baseUrl && consumerKey && consumerSecret);
-};
-
-const buildUrl = (path: string, query?: WooCommerceRequestOptions["query"]) => {
-  if (!baseUrl) {
-    throw new Error("WC_BASE_URL is not set");
+const getWooCommerceApi = () => {
+  if (!siteUrl) {
+    throw new Error("WP_SITE_URL is not set");
   }
-  const normalizedPath = path.replace(/^\//, "");
-  const url = new URL(`${apiPrefix}/${normalizedPath}`, baseUrl);
-  if (query) {
-    Object.entries(query).forEach(([key, value]) => {
-      if (value !== undefined) {
-        url.searchParams.set(key, String(value));
-      }
-    });
-  }
-  return url;
-};
-
-export const wcRequest = async <T>(path: string, options: WooCommerceRequestOptions = {}) => {
-  if (!isWooCommerceConfigured()) {
+  if (!consumerKey || !consumerSecret) {
     throw new Error("WooCommerce environment variables are not configured");
   }
 
-  const url = buildUrl(path, options.query);
-  const headers = new Headers(options.headers);
-  const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
-  headers.set("Authorization", `Basic ${credentials}`);
-  headers.set("Content-Type", "application/json");
-
-  const response = await fetch(url.toString(), {
-    ...options,
-    headers,
+  return new WooCommerceRestApi({
+    url: siteUrl,
+    consumerKey,
+    consumerSecret,
+    version: apiVersion,
   });
+};
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`WooCommerce request failed (${response.status}): ${errorText}`);
-  }
+export const isWooCommerceConfigured = () => {
+  return Boolean(siteUrl && consumerKey && consumerSecret);
+};
 
-  return response.json() as Promise<T>;
+export const wcRequest = async <T>(path: string, options: WooCommerceRequestOptions = {}) => {
+  const api = getWooCommerceApi();
+  const response = await api.get(path, options.query);
+  return response.data as T;
+};
+
+export type WooProduct = {
+  id: number;
+  name: string;
+  price: string;
+  regular_price: string;
+  sale_price: string;
+  on_sale: boolean;
+  stock_status: string;
+};
+
+export type WooCoupon = {
+  id: number;
+  code: string;
+  amount: string;
+  discount_type: string;
+  date_expires?: string | null;
+};
+
+export type WooCustomer = {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+};
+
+export type WooOrder = {
+  id: number;
+  status: string;
+  total: string;
+  currency: string;
+};
+
+export const getProducts = async (query?: Record<string, string | number | boolean | undefined>) => {
+  const api = getWooCommerceApi();
+  const response = await api.get("products", query);
+  return response.data as WooProduct[];
+};
+
+export const getProductById = async (productId: number) => {
+  const api = getWooCommerceApi();
+  const response = await api.get(`products/${productId}`);
+  return response.data as WooProduct;
+};
+
+export const getCouponByCode = async (code: string) => {
+  const api = getWooCommerceApi();
+  const response = await api.get("coupons", { code });
+  const coupons = response.data as WooCoupon[];
+  return coupons[0] ?? null;
+};
+
+export type CreateCustomerPayload = {
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  billing?: Record<string, unknown>;
+  shipping?: Record<string, unknown>;
+};
+
+export const createCustomer = async (payload: CreateCustomerPayload) => {
+  const api = getWooCommerceApi();
+  const response = await api.post("customers", payload);
+  return response.data as WooCustomer;
+};
+
+export type CreateOrderLineItem = {
+  product_id: number;
+  quantity: number;
+};
+
+export type CreateOrderPayload = {
+  customer_id?: number;
+  payment_method?: string;
+  payment_method_title?: string;
+  set_paid?: boolean;
+  currency?: string;
+  billing?: Record<string, unknown>;
+  shipping?: Record<string, unknown>;
+  line_items: CreateOrderLineItem[];
+  coupon_lines?: { code: string }[];
+  customer_note?: string;
+};
+
+export const createOrder = async (payload: CreateOrderPayload) => {
+  const api = getWooCommerceApi();
+  const response = await api.post("orders", payload);
+  return response.data as WooOrder;
 };
