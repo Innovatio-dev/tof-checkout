@@ -74,7 +74,7 @@ export default function Home() {
     if (!phoneCode) {
       return undefined;
     }
-    return countries.find(
+    return countries.reverse().find(
       (country) => country.phoneCode?.replace(/^\+/, "") === phoneCode
     );
   }, [phoneCode]);
@@ -92,6 +92,9 @@ export default function Home() {
   const handlePhoneCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const digits = event.target.value.replace(/\D/g, "");
     setPhoneCode(digits);
+    if (digits) {
+      setCountryCode("");
+    }
   };
 
   return (
@@ -154,8 +157,8 @@ export default function Home() {
               <Input placeholder="Postcode / ZIP" className="col-span-5" />
 
               <div className="col-span-3 flex items-center gap-2 rounded-md border bg-input/50 border-input h-10 px-3">
-                {selectedCountry || phoneCodeCountry ? (
-                  <SnappFlag code={(selectedCountry ?? phoneCodeCountry)!.code} size="s" className="shrink-0" />
+                {phoneCodeCountry || selectedCountry ? (
+                  <SnappFlag code={(phoneCodeCountry ?? selectedCountry)!.code} size="s" className="shrink-0" />
                 ) : (
                   <span className="h-5 w-6 rounded-[4px] border border-white/10" />
                 )}
