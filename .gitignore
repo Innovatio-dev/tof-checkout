@@ -45,3 +45,7 @@ next-env.d.ts
 
 # open-next
 .open-next
+
+# Testing
+/app/data-test
+woocommerce-rest-api-js-lib.md
