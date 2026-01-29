@@ -16,6 +16,7 @@ import CountryCombobox from "@/components/custom/country-combobox";
 import Link from "next/link";
 import SnappFlag from "@/components/custom/snapp-flag";
 import { countries } from "@/lib/countries";
+import IpDetectorBlock from "@/components/custom/ip-detector-block";
 
 export default function Home() {
   const [accountType, setAccountType] = useState("instant-sim-funded");
@@ -273,14 +274,7 @@ export default function Home() {
             </div>
           </div>
           {/* MARK: IP Detection */}
-          <div className="flex justify-between bg-white/8 border border-white/10 rounded-2xl p-6 select-none">
-            <div className="flex items-center gap-3">
-              <SnappFlag code="US" className="h-auto w-7"/>
-              <div className="font-semibold">United States, USA</div>
-              <div className="flex text-muted-foreground font-semibold font-mono px-4">IP: 127.0.0.1</div>
-            </div>
-            <Link href="/support">Contact - <span className="text-neon-green">Support</span></Link>
-          </div>
+          <IpDetectorBlock />
         </div>
       </div>
     </div>
