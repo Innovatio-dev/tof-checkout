@@ -11,16 +11,19 @@ import TofCheckbox from "@/components/custom/tof-checkbox";
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, Lock, LockIcon, LockKeyholeIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
- import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import CountryCombobox from "@/components/custom/country-combobox";
 import Link from "next/link";
 import SnappFlag from "@/components/custom/snapp-flag";
+import { countries } from "@/lib/countries";
 
 export default function Home() {
   const [accountType, setAccountType] = useState("instant-sim-funded");
   const [accountSize, setAccountSize] = useState("50k");
   const [platform, setPlatform] = useState("tradovate-ninjatrader");
   const [quantity, setQuantity] = useState(1);
+  const [countryCode, setCountryCode] = useState("");
+  const [phoneCode, setPhoneCode] = useState("");
 
   const accountTypeLabel = useMemo(() => {
     switch (accountType) {
@@ -60,6 +63,35 @@ export default function Home() {
         return platform;
     }
   }, [platform]);
+
+  const selectedCountry = useMemo(
+    () => countries.find((country) => country.code === countryCode),
+    [countryCode]
+  );
+
+  const phoneCodeCountry = useMemo(() => {
+    if (!phoneCode) {
+      return undefined;
+    }
+    return countries.find(
+      (country) => country.phoneCode?.replace(/^\+/, "") === phoneCode
+    );
+  }, [phoneCode]);
+
+  const handleCountryChange = (value: string) => {
+    setCountryCode(value);
+    if (!phoneCode) {
+      const selectedPhoneCode = countries.find((country) => country.code === value)?.phoneCode;
+      if (selectedPhoneCode) {
+        setPhoneCode(selectedPhoneCode.replace(/^\+/, ""));
+      }
+    }
+  };
+
+  const handlePhoneCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = event.target.value.replace(/\D/g, "");
+    setPhoneCode(digits);
+  };
 
   return (
     <div className="flex flex-col gap-16 font-sans text-white">
@@ -113,15 +145,29 @@ export default function Home() {
               <Input placeholder="Last name" className="col-span-4" />
 
               <div className="col-span-10">
-                <CountryCombobox onChange={(value) => console.log(value)} />
+                <CountryCombobox onChange={handleCountryChange} />
               </div>
               <Input placeholder="House number and street name" className="col-span-10" />
               <Input placeholder="Apartment, suite, etc. (optional)" className="col-span-10" />
               <Input placeholder="City" className="col-span-5" />
               <Input placeholder="Postcode / ZIP" className="col-span-5" />
 
-              <Input placeholder="Phone code" className="col-span-2" />
-              <Input placeholder="Phone number" className="col-span-8" />
+              <div className="col-span-3 flex items-center gap-2 rounded-md border bg-input/50 border-input h-10 px-3">
+                {selectedCountry || phoneCodeCountry ? (
+                  <SnappFlag code={(selectedCountry ?? phoneCodeCountry)!.code} size="s" className="shrink-0" />
+                ) : (
+                  <span className="h-5 w-6 rounded-[4px] border border-white/10" />
+                )}
+                <Input
+                  placeholder="Phone code"
+                  value={phoneCode ? `+${phoneCode}` : ""}
+                  onChange={handlePhoneCodeChange}
+                  inputMode="numeric"
+                  pattern="\d*"
+                  className="h-11 flex-1 border-0 bg-transparent px-0 focus-visible:ring-0"
+                />
+              </div>
+              <Input placeholder="Phone number" className="col-span-7" />
 
               <div className="col-span-10 py-2">
                 <TofCheckbox id="newsletter" name="newsletter" label="Keep me up to date on news and exclusive offers (optional)" />
