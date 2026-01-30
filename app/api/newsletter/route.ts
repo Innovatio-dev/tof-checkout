@@ -7,6 +7,7 @@ type NewsletterRequestBody = {
   email?: string;
   firstName?: string;
   lastName?: string;
+  list_N?: number;
 };
 
 export async function POST(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Newsletter is not configured." }, { status: 500 });
   }
 
-  const { email, firstName, lastName } = (await request.json()) as NewsletterRequestBody;
+  const { email, firstName, lastName, list_N } = (await request.json()) as NewsletterRequestBody;
 
   if (!email) {
     return NextResponse.json({ error: "Email is required." }, { status: 400 });
@@ -27,7 +28,13 @@ export async function POST(request: NextRequest) {
     country: "",
     region: "",
     city: "",
-    list_N: 1,
+    list_N: list_N ?? 1,
+    lists: [
+      {
+        id: list_N ?? 1,
+        value: 1
+      }
+    ],
     status: "confirmed",
   });
 
