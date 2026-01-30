@@ -54,17 +54,17 @@ const IpDetectorBlock = () => {
   }, [geo.countryName, geo.countryCode])
 
   return (
-    <div className="flex justify-between bg-white/8 border border-white/10 rounded-2xl p-6 select-none">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-wrap justify-between bg-white/8 border border-white/10 rounded-2xl p-6 gap-y-4 gap-x-1 select-none text-sm md:text-base">
+      <div className="flex items-center md:gap-3 gap-2">
         {geo.countryCode ? (
-          <SnappFlag code={geo.countryCode} className="h-auto w-7" />
+          <SnappFlag code={geo.countryCode} className="h-auto md:w-7 w-5" />
         ) : (
           <span className="h-5 w-7 rounded-[4px] border border-white/10" />
         )}
         <div className="font-semibold">
           {isLoading ? "Detecting location..." : locationLabel}
         </div>
-        <div className="flex text-muted-foreground font-semibold font-mono px-4">
+        <div className="flex text-muted-foreground font-semibold font-mono md:px-4 px-2">
           {isLoading ? "IP: ..." : `IP: ${geo.ip || "Unavailable"}`}
         </div>
       </div>
