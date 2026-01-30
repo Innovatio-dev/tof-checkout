@@ -46,7 +46,7 @@ const Footer = () => {
     }
   }
   return (
-    <footer className="w-full py-16 px-8">
+    <footer className="w-full py-16 px-8" style={{ backgroundImage: "url('/images/tof-dots.png')", backgroundSize: "100%", backgroundPosition: "center bottom", backgroundRepeat: "no-repeat" }}>
       <div className="flex flex-col gap-16 justify-between max-w-6xl mx-auto">
         <div className="flex flex-wrap justify-between gap-8">
           <div className="flex flex-col gap-4 max-w-xs">
