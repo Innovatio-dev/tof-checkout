@@ -85,7 +85,7 @@ const Footer = () => {
             <h5 className="text-white text-xl">Contact</h5>
             <ul className="flex flex-col gap-2">
               <li><Link href="/" className="hover:text-white">Contact us</Link></li>
-              <li><Link href="/about" className="hover:text-white">FAQ’s</Link></li>
+              <li><Link href="/about" className="hover:text-white">FAQ&apos;s</Link></li>
               <li><Link href="/contact" className="hover:text-white">Discord</Link></li>
             </ul>
           </div>
@@ -101,6 +101,16 @@ const Footer = () => {
           </div>
         </div>
         <Separator className="bg-white/5" />
+        <div className="flex items-center justify-between text-white/90">
+          <div className="flex flex-col gap-10">
+            <div className="max-w-96">© 2025, Top One Futures. All Rights Reserved. Support@TopOneFutures.com</div>
+            <div className="max-w-56">1621 Central Ave, Suite 8433 Cheyenne WY 82001</div>
+          </div>
+          <div className="flex gap-8">
+            <Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white">Terms of Use</Link>
+          </div>
+        </div>
         <div className="text-white/60 text-sm flex flex-col gap-2">
           <p>Disclaimer: All content and information provided on this website are for educational and informational purposes only, specifically relating to trading in financial markets. They should not be construed as specific investment recommendations, endorsements, or solicitations to buy or sell securities or any other investment instruments. It&apos;s emphasized that trading in financial markets carries inherent risks, and potential traders are advised not to invest more than they can afford to lose.</p>
           <p>Top One Futures, LLC does not provide direct broker services, trading services, or hold custody of any investor funds. Any and all broker-related services, including concerns about pricing, slippage, or any trading occurrences, are outsourced to a 3rd party broker over which Top One Futures, LLC has no direct control. The Company is also not a licensed investment service provider and does not offer any services that would fall under such categorization. Any references to “trading” or “trader” on our platform should be understood as notional or fictitious trading on demo accounts.</p>
