@@ -54,6 +54,17 @@ export default function Home() {
     }).format(price);
   }, [price]);
 
+  const formattedTotalPrice = useMemo(() => {
+    if (price === null) {
+      return "—";
+    }
+    const total = price * quantity;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(total);
+  }, [price, quantity]);
+
   const selectedCountry = useMemo(
     () => countries.find((country) => country.code === countryCode),
     [countryCode]
@@ -301,7 +312,7 @@ export default function Home() {
             <div className="flex justify-between items-start py-2">
               <div>Total</div>
               <div className="text-neon-yellow text-3xl font-semibold">
-                {formattedPrice}
+                {formattedTotalPrice}
               </div>
             </div>
 
@@ -335,7 +346,7 @@ export default function Home() {
               <TofCheckbox id="terms" name="terms" label="Agree to our Privacy Policy and Terms and Conditions*" />
 
               <div className="flex flex-col gap-4">
-                <Button size={'lg'} className="w-full font-bold h-12" variant={'primary'} disabled={priceLoading}>
+                <Button size={'lg'} className="w-full font-bold h-12 white-glow" variant={'primary'} disabled={priceLoading}>
                   { priceLoading ? "Loading..." : "Place order"}
                   { priceLoading ? <Spinner /> : <span className="bg-black text-white py-1 px-3 rounded-full">
                     <ArrowRightIcon className="tof-arrow-float-x -translate-y-px" />
