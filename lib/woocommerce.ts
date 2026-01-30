@@ -103,6 +103,12 @@ export const createCustomer = async (payload: CreateCustomerPayload) => {
   return response.data as WooCustomer;
 };
 
+export const getCustomersByEmail = async (email: string) => {
+  const api = getWooCommerceApi();
+  const response = await api.get("customers", { email });
+  return response.data as WooCustomer[];
+};
+
 export type CreateOrderLineItem = {
   product_id: number;
   quantity: number;

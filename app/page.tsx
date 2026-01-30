@@ -31,6 +31,20 @@ export default function Home() {
   const [platformOptions, setPlatformOptions] = useState<{ value: string; label: string }[]>([]);
   const [countryCode, setCountryCode] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [address1, setAddress1] = useState("");
+  const [address2, setAddress2] = useState("");
+  const [city, setCity] = useState("");
+  const [postcode, setPostcode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [newsletter, setNewsletter] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const accountTypeLabel = useMemo(() => {
     return accountTypeOptions.find((option) => option.value === accountType)?.label ?? accountType;
@@ -94,6 +108,89 @@ export default function Home() {
     setPhoneCode(digits);
     if (digits) {
       setCountryCode("");
+    }
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    if (!email.trim()) {
+      errors.email = "Email is required.";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = "Enter a valid email address.";
+    }
+    if (!firstName.trim()) {
+      errors.firstName = "First name is required.";
+    }
+    if (!lastName.trim()) {
+      errors.lastName = "Last name is required.";
+    }
+    if (!countryCode.trim()) {
+      errors.countryCode = "Country is required.";
+    }
+    if (!address1.trim()) {
+      errors.address1 = "Street address is required.";
+    }
+    if (!city.trim()) {
+      errors.city = "City is required.";
+    }
+    if (!postcode.trim()) {
+      errors.postcode = "Postcode is required.";
+    }
+    if (!phoneCode.trim()) {
+      errors.phoneCode = "Phone code is required.";
+    }
+    if (!phoneNumber.trim()) {
+      errors.phoneNumber = "Phone number is required.";
+    }
+    if (!termsAccepted) {
+      errors.terms = "You must accept the terms to place your order.";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+    if (!validateForm()) {
+      return;
+    }
+
+    setSubmitLoading(true);
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          firstName,
+          lastName,
+          countryCode,
+          address1,
+          address2,
+          city,
+          postcode,
+          phoneCode,
+          phoneNumber,
+          quantity,
+          accountType,
+          accountSize,
+          platform,
+          newsletter,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string };
+        throw new Error(data.error ?? "Failed to place order.");
+      }
+
+      setSubmitSuccess("Order created successfully. We'll be in touch shortly.");
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Failed to place order.");
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -215,25 +312,81 @@ export default function Home() {
           {/* #2 Customer information */}
           <div className="flex flex-col gap-4">
             <InstructionItem number={2} caption="Customer information" />
-            <Input placeholder="Enter your email" />
+            <div className="flex flex-col gap-2">
+              <Input
+                placeholder="Enter your email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={Boolean(fieldErrors.email)}
+              />
+              {fieldErrors.email && <span className="text-sm text-red-400">{fieldErrors.email}</span>}
+            </div>
           </div>
 
           {/* #3 Billing details */}
           <div className="flex flex-col gap-4">
             <InstructionItem number={3} caption="Billing details" />
             <div className="grid grid-cols-10 gap-4">
-              <Input placeholder="First name" className="col-span-6" />
-              <Input placeholder="Last name" className="col-span-4" />
-
-              <div className="col-span-10">
-                <CountryCombobox onChange={handleCountryChange} />
+              <div className="col-span-6 flex flex-col gap-2">
+                <Input
+                  placeholder="First name"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.firstName)}
+                />
+                {fieldErrors.firstName && <span className="text-sm text-red-400">{fieldErrors.firstName}</span>}
               </div>
-              <Input placeholder="House number and street name" className="col-span-10" />
-              <Input placeholder="Apartment, suite, etc. (optional)" className="col-span-10" />
-              <Input placeholder="City" className="col-span-5" />
-              <Input placeholder="Postcode / ZIP" className="col-span-5" />
+              <div className="col-span-4 flex flex-col gap-2">
+                <Input
+                  placeholder="Last name"
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.lastName)}
+                />
+                {fieldErrors.lastName && <span className="text-sm text-red-400">{fieldErrors.lastName}</span>}
+              </div>
 
-              <div className="col-span-3 flex items-center gap-2 rounded-md border bg-input/50 border-input h-10 px-3">
+              <div className="col-span-10 flex flex-col gap-2">
+                <CountryCombobox onChange={handleCountryChange} />
+                {fieldErrors.countryCode && <span className="text-sm text-red-400">{fieldErrors.countryCode}</span>}
+              </div>
+              <div className="col-span-10 flex flex-col gap-2">
+                <Input
+                  placeholder="House number and street name"
+                  value={address1}
+                  onChange={(event) => setAddress1(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.address1)}
+                />
+                {fieldErrors.address1 && <span className="text-sm text-red-400">{fieldErrors.address1}</span>}
+              </div>
+              <Input
+                placeholder="Apartment, suite, etc. (optional)"
+                className="col-span-10"
+                value={address2}
+                onChange={(event) => setAddress2(event.target.value)}
+              />
+              <div className="col-span-5 flex flex-col gap-2">
+                <Input
+                  placeholder="City"
+                  value={city}
+                  onChange={(event) => setCity(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.city)}
+                />
+                {fieldErrors.city && <span className="text-sm text-red-400">{fieldErrors.city}</span>}
+              </div>
+              <div className="col-span-5 flex flex-col gap-2">
+                <Input
+                  placeholder="Postcode / ZIP"
+                  value={postcode}
+                  onChange={(event) => setPostcode(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.postcode)}
+                />
+                {fieldErrors.postcode && <span className="text-sm text-red-400">{fieldErrors.postcode}</span>}
+              </div>
+
+              <div className="col-span-3 flex flex-col gap-2">
+                <div className="flex items-center gap-2 rounded-md border bg-input/50 border-input h-10 px-3">
                 {phoneCodeCountry || selectedCountry ? (
                   <SnappFlag code={(phoneCodeCountry ?? selectedCountry)!.code} size="s" className="shrink-0" />
                 ) : (
@@ -246,12 +399,29 @@ export default function Home() {
                   inputMode="numeric"
                   pattern="\d*"
                   className="h-11 flex-1 border-0 bg-transparent px-0 focus-visible:ring-0"
+                  aria-invalid={Boolean(fieldErrors.phoneCode)}
                 />
+                </div>
+                {fieldErrors.phoneCode && <span className="text-sm text-red-400">{fieldErrors.phoneCode}</span>}
               </div>
-              <Input placeholder="Phone number" className="col-span-7" />
+              <div className="col-span-7 flex flex-col gap-2">
+                <Input
+                  placeholder="Phone number"
+                  value={phoneNumber}
+                  onChange={(event) => setPhoneNumber(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.phoneNumber)}
+                />
+                {fieldErrors.phoneNumber && <span className="text-sm text-red-400">{fieldErrors.phoneNumber}</span>}
+              </div>
 
               <div className="col-span-10 py-2">
-                <TofCheckbox id="newsletter" name="newsletter" label="Keep me up to date on news and exclusive offers (optional)" />
+                <TofCheckbox
+                  id="newsletter"
+                  name="newsletter"
+                  label="Keep me up to date on news and exclusive offers (optional)"
+                  checked={newsletter}
+                  onCheckedChange={setNewsletter}
+                />
               </div>
             </div>
           </div>
@@ -343,15 +513,32 @@ export default function Home() {
                 </RadioGroup>
               </div>
 
-              <TofCheckbox id="terms" name="terms" label="Agree to our Privacy Policy and Terms and Conditions*" />
+              <div className="flex flex-col gap-2">
+                <TofCheckbox
+                  id="terms"
+                  name="terms"
+                  label="Agree to our Privacy Policy and Terms and Conditions*"
+                  checked={termsAccepted}
+                  onCheckedChange={setTermsAccepted}
+                />
+                {fieldErrors.terms && <span className="text-sm text-red-400">{fieldErrors.terms}</span>}
+              </div>
 
               <div className="flex flex-col gap-4">
-                <Button size={'lg'} className="w-full font-bold h-12 white-glow" variant={'primary'} disabled={priceLoading}>
-                  { priceLoading ? "Loading..." : "Place order"}
-                  { priceLoading ? <Spinner /> : <span className="bg-black text-white py-1 px-3 rounded-full">
+                <Button
+                  size={'lg'}
+                  className="w-full font-bold h-12 white-glow"
+                  variant={'primary'}
+                  disabled={priceLoading || submitLoading}
+                  onClick={handleSubmit}
+                >
+                  { priceLoading || submitLoading ? "Loading..." : "Place order"}
+                  { priceLoading || submitLoading ? <Spinner /> : <span className="bg-black text-white py-1 px-3 rounded-full">
                     <ArrowRightIcon className="tof-arrow-float-x -translate-y-px" />
                   </span>}
                 </Button>
+                {submitError && <span className="text-sm text-red-400">{submitError}</span>}
+                {submitSuccess && <span className="text-sm text-green-400">{submitSuccess}</span>}
                 <div className="flex items-center justify-center gap-2 text-white/50 text-sm">
                   <LockIcon className="w-4 h-4" />
                   All payments are secured and encrypted
