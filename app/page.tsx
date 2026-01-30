@@ -11,59 +11,48 @@ import TofCheckbox from "@/components/custom/tof-checkbox";
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, Lock, LockIcon, LockKeyholeIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CountryCombobox from "@/components/custom/country-combobox";
 import Link from "next/link";
 import SnappFlag from "@/components/custom/snapp-flag";
 import { countries } from "@/lib/countries";
 import IpDetectorBlock from "@/components/custom/ip-detector-block";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Home() {
   const [accountType, setAccountType] = useState("instant-sim-funded");
   const [accountSize, setAccountSize] = useState("50k");
   const [platform, setPlatform] = useState("tradovate-ninjatrader");
   const [quantity, setQuantity] = useState(1);
+  const [price, setPrice] = useState<number | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [accountTypeOptions, setAccountTypeOptions] = useState<{ value: string; label: string }[]>([]);
+  const [accountSizeOptions, setAccountSizeOptions] = useState<{ value: string; label: string }[]>([]);
+  const [platformOptions, setPlatformOptions] = useState<{ value: string; label: string }[]>([]);
   const [countryCode, setCountryCode] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
 
   const accountTypeLabel = useMemo(() => {
-    switch (accountType) {
-      case "one-step-elite":
-        return "1- Step ELITE Challenge";
-      case "instant-sim-funded":
-        return "INSTANT Sim Funded";
-      case "s2f-sim-pro":
-        return "S2F Sim PRO";
-      case "ignite-instant":
-        return "IGNITE Instant Funding";
-      default:
-        return accountType;
-    }
-  }, [accountType]);
+    return accountTypeOptions.find((option) => option.value === accountType)?.label ?? accountType;
+  }, [accountType, accountTypeOptions]);
 
   const accountSizeLabel = useMemo(() => {
-    switch (accountSize) {
-      case "25k":
-        return "$25,000";
-      case "50k":
-        return "$50,000";
-      case "100k":
-        return "$100,000";
-      case "250k":
-        return "$250,000";
-      default:
-        return accountSize;
-    }
-  }, [accountSize]);
+    return accountSizeOptions.find((option) => option.value === accountSize)?.label ?? accountSize;
+  }, [accountSize, accountSizeOptions]);
 
   const platformLabel = useMemo(() => {
-    switch (platform) {
-      case "tradovate-ninjatrader":
-        return "Tradovate / Ninjatrader";
-      default:
-        return platform;
+    return platformOptions.find((option) => option.value === platform)?.label ?? platform;
+  }, [platform, platformOptions]);
+
+  const formattedPrice = useMemo(() => {
+    if (price === null) {
+      return "—";
     }
-  }, [platform]);
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(price);
+  }, [price]);
 
   const selectedCountry = useMemo(
     () => countries.find((country) => country.code === countryCode),
@@ -97,6 +86,83 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    const loadPrice = async () => {
+      setPriceLoading(true);
+      try {
+        const response = await fetch("/api/price", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accountType, accountSize, platform }),
+        });
+
+        if (!response.ok) {
+          // If price is not found, return
+          if (response.status === 404) {
+            return;
+          }
+          throw new Error("Failed to load price");
+        }
+
+        const data = (await response.json()) as { price: number };
+        if (isMounted) {
+          setPrice(data.price);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setPrice(null);
+        }
+        console.error(error);
+      } finally {
+        if (isMounted) {
+          setPriceLoading(false);
+        }
+      }
+    };
+
+    loadPrice();
+    return () => {
+      isMounted = false;
+    };
+  }, [accountType, accountSize, platform]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadOptions = async () => {
+      try {
+        const response = await fetch(`/api/price?accountType=${accountType}`);
+        if (!response.ok) {
+          throw new Error("Failed to load options");
+        }
+        const data = (await response.json()) as {
+          accountTypes: { value: string; label: string }[];
+          accountSizes: { value: string; label: string }[];
+          platforms: { value: string; label: string }[];
+        };
+        if (isMounted) {
+          setAccountTypeOptions(data.accountTypes);
+          setAccountSizeOptions(data.accountSizes);
+          setPlatformOptions(data.platforms);
+
+          if (data.accountSizes.length && !data.accountSizes.some((option) => option.value === accountSize)) {
+            setAccountSize(data.accountSizes[0].value);
+          }
+          if (data.platforms.length && !data.platforms.some((option) => option.value === platform)) {
+            setPlatform(data.platforms[0].value);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadOptions();
+    return () => {
+      isMounted = false;
+    };
+  }, [accountType, accountSize, platform]);
+
   return (
     <div className="flex flex-col gap-16 font-sans text-white">
       <div>
@@ -112,25 +178,25 @@ export default function Home() {
             <InstructionItem number={1} caption="Confirm trading account information" />
             <FormSection title="Account type">
               <RadioGroup value={accountType} onValueChange={setAccountType} className="grid grid-cols-2 gap-3">
-                <TofRadioItem id="one-step-elite" value="one-step-elite" label="1- Step ELITE Challenge"/>
-                <TofRadioItem id="instant-sim-funded" value="instant-sim-funded" label="INSTANT Sim Funded"/>
-                <TofRadioItem id="s2f-sim-pro" value="s2f-sim-pro" label="S2F Sim PRO"/>
-                <TofRadioItem id="ignite-instant" value="ignite-instant" label="IGNITE Instant Funding"/>
+                {accountTypeOptions.map((option) => (
+                  <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
+                ))}
               </RadioGroup>
             </FormSection>
 
             <FormSection title="Account size">
               <RadioGroup value={accountSize} onValueChange={setAccountSize} className="grid grid-cols-2 gap-3">
-                <TofRadioItem id="25k" value="25k" label="$25,000"/>
-                <TofRadioItem id="50k" value="50k" label="$50,000"/>
-                <TofRadioItem id="100k" value="100k" label="$100,000"/>
-                <TofRadioItem id="250k" value="250k" label="$250,000"/>
+                {accountSizeOptions.map((option) => (
+                  <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
+                ))}
               </RadioGroup>
             </FormSection>
 
             <FormSection title="Platform">
               <RadioGroup value={platform} onValueChange={setPlatform} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <TofRadioItem id="tradovate-ninjatrader" value="tradovate-ninjatrader" label="Tradovate / Ninjatrader"/>
+                {platformOptions.map((option) => (
+                  <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
+                ))}
               </RadioGroup>
             </FormSection>
           </div>
@@ -184,24 +250,26 @@ export default function Home() {
         <div className="flex flex-col gap-8 w-full md:w-1/2 lg:min-w-lg md:min-w-md md:shrink-0"> {/* Second Column */}
           <div className="flex flex-col gap-4 bg-white/8 border border-white/10 rounded-2xl p-6">
             <h4 className="text-xl font-semibold">Top One Futures Account</h4>
-            <div className="flex flex-wrap gap-2 text-xs">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-white/80">
+            <div className="flex flex-wrap gap-2 text-xs min-h-[60px]">
+              <span className="flex h-fit items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-white/80">
                 <span className="text-white/50">Type</span>
                 <span className="text-white">{accountTypeLabel}</span>
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-white/80">
+              <span className="flex h-fit items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-white/80">
                 <span className="text-white/50">Size</span>
                 <span className="text-white">{accountSizeLabel}</span>
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-neon-yellow/20 bg-white/8 px-3 py-1 text-white/80">
+              <span className="flex h-fit items-center gap-2 rounded-full border border-neon-yellow/20 bg-white/8 px-3 py-1 text-white/80">
                 <span className="text-white/50">Platform</span>
                 <span className="text-neon-yellow">{platformLabel}</span>
               </span>
             </div>
 
             <div className="flex justify-between items-center py-2 select-none">
-              <div className="text-sm md:text-base">Account ($100K)</div>
-              <div className="flex items-center md:gap-8 gap-4">
+              <div className="text-sm md:text-base">
+                Account ({accountSizeLabel})
+              </div>
+              <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Button
                     variant={'outline'}
@@ -222,7 +290,9 @@ export default function Home() {
                     <PlusIcon />
                   </Button>
                 </div>
-                <div className="text-sm md:text-base">$100,000</div>
+                <div className="text-sm md:text-base min-w-[72px] text-right">
+                  {formattedPrice}
+                </div>
               </div>
             </div>
 
@@ -230,7 +300,9 @@ export default function Home() {
 
             <div className="flex justify-between items-start py-2">
               <div>Total</div>
-              <div className="text-neon-yellow text-3xl font-semibold">$100,000</div>
+              <div className="text-neon-yellow text-3xl font-semibold">
+                {formattedPrice}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -263,11 +335,11 @@ export default function Home() {
               <TofCheckbox id="terms" name="terms" label="Agree to our Privacy Policy and Terms and Conditions*" />
 
               <div className="flex flex-col gap-4">
-                <Button size={'lg'} className="w-full font-bold h-12" variant={'primary'}>
-                  Place order
-                  <span className="bg-black text-white py-1 px-3 rounded-full">
+                <Button size={'lg'} className="w-full font-bold h-12" variant={'primary'} disabled={priceLoading}>
+                  { priceLoading ? "Loading..." : "Place order"}
+                  { priceLoading ? <Spinner /> : <span className="bg-black text-white py-1 px-3 rounded-full">
                     <ArrowRightIcon className="tof-arrow-float-x -translate-y-px" />
-                  </span>
+                  </span>}
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-white/50 text-sm">
                   <LockIcon className="w-4 h-4" />
