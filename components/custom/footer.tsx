@@ -49,31 +49,34 @@ const Footer = () => {
     <footer className="w-full py-16 px-8" style={{ backgroundImage: "url('/images/tof-dots.png')", backgroundSize: "100%", backgroundPosition: "center bottom", backgroundRepeat: "no-repeat" }}>
       <div className="flex flex-col gap-16 justify-between max-w-6xl mx-auto">
         <div className="flex flex-wrap justify-between gap-8">
-          <div className="flex flex-col gap-4 max-w-xs">
-            <Image src="/images/tof-logo.png" alt="Logo" width={669} height={192} className="w-40" />
-            <div className="text-white text-lg lg:text-2xl">Get access to our exclusive updates and stay ahead with the latest news!</div>
-            <div className="flex items-center bg-dark-gray pr-4 rounded-xl">
-              <Input
-                placeholder="Email address"
-                className="border-none bg-transparent h-14 ring-0 text-white focus-visible:ring-0 pl-4"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={isSubmitting}
-              />
-              <Button
-                size="icon"
-                variant="primary"
-                className="rounded-full"
-                onClick={handleSubscribe}
-                disabled={isSubmitting}
-                aria-label="Subscribe to newsletter"
-              >
-                <ChevronRight className="w-7! h-7!" />
-              </Button>
+          <div className="lg:max-w-xs w-full flex justify-center sm:justify-start">
+            <div className="flex flex-col gap-4 max-w-xs items-center sm:items-start">
+              <Image src="/images/tof-logo.png" alt="Logo" width={669} height={192} className="w-40" />
+              <div className="text-white text-lg lg:text-2xl text-center sm:text-left">Get access to our exclusive updates and stay ahead with the latest news!</div>
+              <div className="flex items-center bg-dark-gray pr-4 rounded-xl">
+                <Input
+                  placeholder="Email address"
+                  className="border-none bg-transparent h-14 ring-0 text-white focus-visible:ring-0 pl-4"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={isSubmitting}
+                />
+                <Button
+                  size="icon"
+                  variant="primary"
+                  className="rounded-full"
+                  onClick={handleSubscribe}
+                  disabled={isSubmitting}
+                  aria-label="Subscribe to newsletter"
+                >
+                  <ChevronRight className="w-7! h-7!" />
+                </Button>
+              </div>
+              {message ? <p className="text-sm text-white/70">{message}</p> : null}
             </div>
-            {message ? <p className="text-sm text-white/70">{message}</p> : null}
           </div>
-          <div className="flex flex-col gap-4 text-white/60">
+          <Separator className="block sm:hidden bg-white/5" />
+          <div className="flex flex-col gap-4 text-white/60 w-full sm:w-auto">
             <h5 className="text-white text-xl">Navigation</h5>
             <ul className="flex flex-col gap-2">
               <li><Link href="/" className="hover:text-white">Home</Link></li>
@@ -81,7 +84,7 @@ const Footer = () => {
               <li><Link href="/contact" className="hover:text-white">Dashboard Sign in</Link></li>
             </ul>
           </div>
-          <div className="flex flex-col gap-4 text-white/60">
+          <div className="flex flex-col gap-4 text-white/60 w-full sm:w-auto">
             <h5 className="text-white text-xl">Contact</h5>
             <ul className="flex flex-col gap-2">
               <li><Link href="/" className="hover:text-white">Contact us</Link></li>
@@ -89,7 +92,7 @@ const Footer = () => {
               <li><Link href="/contact" className="hover:text-white">Discord</Link></li>
             </ul>
           </div>
-          <div className="flex flex-col gap-4 text-white/60">
+          <div className="flex flex-col gap-4 text-white/60 w-full sm:w-auto">
             <h5 className="text-white text-xl">Social Media</h5>
             <ul className="flex flex-col gap-2">
               <li><Link href="/" className="hover:text-white">Facebook</Link></li>
@@ -106,7 +109,7 @@ const Footer = () => {
             <div className="max-w-96">© 2025, Top One Futures. All Rights Reserved. Support@TopOneFutures.com</div>
             <div className="max-w-56">1621 Central Ave, Suite 8433 Cheyenne WY 82001</div>
           </div>
-          <div className="flex gap-8">
+          <div className="hidden sm:flex gap-8">
             <Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white">Terms of Use</Link>
           </div>
