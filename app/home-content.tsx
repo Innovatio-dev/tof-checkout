@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -20,7 +19,7 @@ import SnappFlag from "@/components/custom/snapp-flag";
 import { countries } from "@/lib/countries";
 import IpDetectorBlock from "@/components/custom/ip-detector-block";
 import { Spinner } from "@/components/ui/spinner";
-import Modal from "@/components/custom/modal";
+import InitModal from "@/components/home/init-modal";
 
 export default function HomeContent() {
   const searchParams = useSearchParams();
@@ -51,11 +50,6 @@ export default function HomeContent() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [isModalOpen, setIsModalOpen] = useState(!isTesting);
-  const [modalName, setModalName] = useState("");
-  const [modalEmail, setModalEmail] = useState("");
-  const [modalSubmitting, setModalSubmitting] = useState(false);
-  const [modalMessage, setModalMessage] = useState<string | null>(null);
 
   const accountTypeLabel = useMemo(() => {
     return accountTypeOptions.find((option) => option.value === accountType)?.label ?? accountType;
@@ -90,10 +84,6 @@ export default function HomeContent() {
     }).format(total);
   }, [price, quantity]);
 
-  const modalEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(modalEmail), [modalEmail]);
-  const modalNameValid = useMemo(() => modalName.trim().length > 1, [modalName]);
-  const modalFormValid = modalEmailValid && modalNameValid;
-
   const selectedCountry = useMemo(
     () => countries.find((country) => country.code === countryCode),
     [countryCode]
@@ -115,43 +105,6 @@ export default function HomeContent() {
       if (selectedPhoneCode) {
         setPhoneCode(selectedPhoneCode.replace(/^\+/, ""));
       }
-    }
-  };
-
-  const handleModalSubmit = async () => {
-    if (!modalFormValid || modalSubmitting) {
-      return;
-    }
-
-    setModalSubmitting(true);
-    setModalMessage(null);
-
-    const trimmedName = modalName.trim();
-    const [firstName, ...lastNameParts] = trimmedName.split(/\s+/);
-
-    try {
-      const response = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: modalEmail,
-          firstName,
-          lastName: lastNameParts.join(" "),
-          list_N: 2,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? "Subscription failed. Please try again.");
-      }
-
-      setModalMessage("Thanks! You're in.");
-      setIsModalOpen(false);
-    } catch (error) {
-      setModalMessage(error instanceof Error ? error.message : "Subscription failed.");
-    } finally {
-      setModalSubmitting(false);
     }
   };
 
@@ -295,12 +248,6 @@ export default function HomeContent() {
   }, [accountType, accountSize, platform]);
 
   useEffect(() => {
-    if (isTesting) {
-      setIsModalOpen(false);
-    }
-  }, [isTesting]);
-
-  useEffect(() => {
     let isMounted = true;
     const loadOptions = async () => {
       try {
@@ -339,63 +286,7 @@ export default function HomeContent() {
   return (
     <div className="flex flex-col gap-16 font-sans text-white">
       {/* MARK: Init Modal */}
-      <Modal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        backHref="https://toponefutures.com"
-        modalDescription="Enter your information to receive instructions after checkout."
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Image src="/images/tof-logo-dark.png" alt="Top One Futures" width={335} height={96} />
-          <h2 className="text-2xl font-bold text-gray-900 md:text-3xl leading-none mt-4">
-            Enter your information to receive instructions after checkout.
-          </h2>
-          <Link
-            href="#"
-            className="text-sm font-medium text-gray-700 underline underline-offset-4"
-          >
-            Have an account? Log In
-          </Link>
-        </div>
-        <div className="flex flex-col gap-4 w-full max-w-[360px] mx-auto">
-          <Input
-            placeholder="Enter your full name"
-            value={modalName}
-            onChange={(event) => setModalName(event.target.value)}
-            className="h-12 rounded-xl border border-gray-200 bg-gray-50 px-4 text-gray-900"
-            aria-invalid={!modalNameValid && modalName.length > 0}
-          />
-          <Input
-            placeholder="Enter your email"
-            type="email"
-            value={modalEmail}
-            onChange={(event) => setModalEmail(event.target.value)}
-            className="h-12 rounded-xl border border-gray-200 bg-gray-50 px-4 text-gray-900"
-            aria-invalid={!modalEmailValid && modalEmail.length > 0}
-          />
-          <Button
-            size="lg"
-            className="w-full font-bold h-12 white-glow bg-dark-gray text-white hover:bg-dark-gray/90"
-            variant="primary"
-            disabled={!modalFormValid || modalSubmitting}
-            onClick={handleModalSubmit}
-          >
-            {modalSubmitting ? "Loading..." : "Continue to checkout"}
-            {modalSubmitting ? (
-              <Spinner />
-            ) : (
-              <span className="bg-white text-black py-[2px] px-3 rounded-full">
-                <ArrowRightIcon className="tof-arrow-float-x -translate-y-[1.5px]" />
-              </span>
-            )}
-          </Button>
-          <p className="text-xs text-gray-500">
-            Agree to our <span className="underline underline-offset-4">Privacy Policy</span> and{" "}
-            <span className="underline underline-offset-4">Terms and Conditions</span> *
-          </p>
-          {modalMessage ? <p className="text-sm text-gray-600">{modalMessage}</p> : null}
-        </div>
-      </Modal>
+      <InitModal defaultOpen={!isTesting} isTesting={isTesting} />
       <div>
         <h1 className="text-6xl font-semibold">Checkout</h1>
         <p className="text-lg max-w-md">
