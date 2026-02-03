@@ -12,13 +12,15 @@ type ModalProps = {
   backHref: string
   children: React.ReactNode
   className?: string
+  modalDescription?: string
 }
 
-const Modal = ({ open, onOpenChange, backHref, children, className }: ModalProps) => {
+const Modal = ({ open, onOpenChange, backHref, children, className, modalDescription }: ModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
+        aria-description={modalDescription}
         className={cn(
           "w-[95%] max-w-[640px] rounded-2xl border-none bg-white py-10 px-4 text-center text-gray-900 shadow-2xl",
           className

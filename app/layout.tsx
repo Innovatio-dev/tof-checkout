@@ -35,7 +35,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} antialiased bg-dark relative min-h-screen`}>
         <div className="absolute top-0 left-1/2 transform -translate-1/2 w-full">
-          <Image src="/images/tof-dots.png" alt="Logo" width={1300} height={1300} className="bg-transparent w-full" />
+          <Image src="/images/tof-dots.png" alt="Logo" width={1144} height={546} className="bg-transparent w-full" />
         </div>
         <div className="absolute w-1/2 aspect-square top-0 left-1/2 transform -translate-x-1/3 -translate-y-1/2 bg-neon-green/5 rounded-full blur-3xl"></div>
         <main className="relative">

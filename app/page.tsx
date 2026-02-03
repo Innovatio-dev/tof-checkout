@@ -321,9 +321,9 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-16 font-sans text-white">
       {/* MARK: Init Modal */}
-      <Modal open={isModalOpen} onOpenChange={setIsModalOpen} backHref="https://toponefutures.com">
+      <Modal open={isModalOpen} onOpenChange={setIsModalOpen} backHref="https://toponefutures.com" modalDescription="Enter your information to receive instructions after checkout.">
         <div className="flex flex-col items-center gap-4">
-          <Image src="/images/tof-logo-dark.png" alt="Top One Futures" width={180} height={60} />
+          <Image src="/images/tof-logo-dark.png" alt="Top One Futures" width={335} height={96} />
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl leading-none mt-4">
             Enter your information to receive instructions after checkout.
           </h2>
