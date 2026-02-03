@@ -321,7 +321,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-16 font-sans text-white">
       {/* MARK: Init Modal */}
-      <Modal open={isModalOpen} onOpenChange={setIsModalOpen} backHref="https://example.com">
+      <Modal open={isModalOpen} onOpenChange={setIsModalOpen} backHref="https://toponefutures.com">
         <div className="flex flex-col items-center gap-4">
           <Image src="/images/tof-logo-dark.png" alt="Top One Futures" width={180} height={60} />
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl leading-none mt-4">
@@ -362,7 +362,7 @@ export default function Home() {
               <Spinner />
             ) : (
               <span className="bg-white text-black py-[2px] px-3 rounded-full">
-                <ArrowRightIcon className="tof-arrow-float-x -translate-y-px" />
+                <ArrowRightIcon className="tof-arrow-float-x -translate-y-[1.5px]" />
               </span>
             )}
           </Button>
