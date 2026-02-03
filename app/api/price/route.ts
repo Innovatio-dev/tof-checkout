@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-type PriceEntry = { recurrence: string; platforms: Record<string, number> };
+type PriceEntry = { wooId: string; wooVariantId?: string; recurrence: string; platforms: Record<string, number> };
 type PriceTable = Record<string, Record<string, PriceEntry>>;
 type Option = { value: string; label: string };
 
@@ -15,6 +15,7 @@ const ACCOUNT_SIZE_LABELS: Record<string, string> = {
   "25k": "$25,000",
   "50k": "$50,000",
   "100k": "$100,000",
+  "150k": "$150,000",
   "250k": "$250,000",
 };
 
@@ -25,68 +26,91 @@ const PLATFORM_LABELS: Record<string, string> = {
 const PRICE_TABLE: PriceTable = {
   "one-step-elite": {
     "25k": {
+      wooId: "167",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 69 },
     },
     "50k": {
+      wooId: "168",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 105 },
     },
     "100k": {
+      wooId: "169",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 209 },
     },
     "250k": {
+      wooId: "170",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 309 },
     },
   },
   "instant-sim-funded": {
-    "25k": {
+    /* "25k": {
+      wooId: "135",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 419 },
     },
     "50k": {
+      wooId: "135",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 679 },
-    },
+    }, */
     "100k": {
+      wooId: "135",
+      wooVariantId: "143",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 821 },
     },
-    "250k": {
+    "150k": {
+      wooId: "135",
+      wooVariantId: "146",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 939 },
     },
   },
   "s2f-sim-pro": {
-    "25k": {
+    /* "25k": {
+      wooId: "135",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 257 },
-    },
+    }, */
     "50k": {
+      wooId: "135",
+      wooVariantId: "141",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 421 },
     },
     "100k": {
+      wooId: "135",
+      wooVariantId: "144",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 632 },
     },
-    "250k": {
+    "150k": {
+      wooId: "135",
+      wooVariantId: "147",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 727 },
     },
   },
   "ignite-instant": {
     "25k": {
+      wooId: "135",
+      wooVariantId: "148",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 218 },
     },
     "50k": {
+      wooId: "135",
+      wooVariantId: "149",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 398 },
     },
     "100k": {
+      wooId: "135",
+      wooVariantId: "150",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 563 },
     },
