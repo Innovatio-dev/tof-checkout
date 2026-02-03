@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import ThankYouContent from "./thank-you-content";
+import ThankYouContent from "@/components/thank-you/thank-you-content";
 
 export default function ThankYouPage() {
   return (
