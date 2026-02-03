@@ -22,6 +22,18 @@ jobs:
         with:
           node-version: '22.12.0'
           cache: 'pnpm'
+
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          # Wordpress API
+          WP_SITE_URL=${{ secrets.WP_SITE_URL }}
+          WP_CONSUMER_KEY=${{ secrets.WP_CONSUMER_KEY }}
+          WP_CONSUMER_SECRET=${{ secrets.WP_CONSUMER_SECRET }}
+          # Newsletter keys
+          NEWSLETTER_CLIENT_ID=${{ secrets.NEWSLETTER_CLIENT_ID }}
+          NEWSLETTER_CLIENT_SECRET=${{ secrets.NEWSLETTER_CLIENT_SECRET }}
+          EOF
       
       - name: Install dependencies
         run: pnpm install

@@ -11,6 +11,14 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Nextjs("MyWeb");
+    new sst.aws.Nextjs("MyWeb", {
+      environment: {
+        WP_SITE_URL: process.env.WP_SITE_URL!,
+        WP_CONSUMER_KEY: process.env.WP_CONSUMER_KEY!,
+        WP_CONSUMER_SECRET: process.env.WP_CONSUMER_SECRET!,
+        NEWSLETTER_CLIENT_ID: process.env.NEWSLETTER_CLIENT_ID!,
+        NEWSLETTER_CLIENT_SECRET: process.env.NEWSLETTER_CLIENT_SECRET!
+      },
+    });
   },
 });
