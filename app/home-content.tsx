@@ -30,6 +30,7 @@ export default function HomeContent() {
   const [platform, setPlatform] = useState("tradovate-ninjatrader");
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState<number | null>(null);
+  const [recurrence, setRecurrence] = useState<string | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
   const [accountTypeOptions, setAccountTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [accountSizeOptions, setAccountSizeOptions] = useState<{ value: string; label: string }[]>([]);
@@ -269,13 +270,15 @@ export default function HomeContent() {
           throw new Error("Failed to load price");
         }
 
-        const data = (await response.json()) as { price: number };
+        const data = (await response.json()) as { price: number; recurrence: string };
         if (isMounted) {
           setPrice(data.price);
+          setRecurrence(data.recurrence);
         }
       } catch (error) {
         if (isMounted) {
           setPrice(null);
+          setRecurrence(null);
         }
         console.error(error);
       } finally {
@@ -605,7 +608,12 @@ export default function HomeContent() {
 
             <div className="flex justify-between items-start py-2">
               <div>Total</div>
-              <div className="text-neon-yellow text-3xl font-semibold">{formattedTotalPrice}</div>
+              <div className="flex flex-col items-end">
+                <div className="text-neon-yellow text-3xl font-semibold leading-none">
+                  {formattedTotalPrice}
+                </div>
+                <div className="text-white/50 text-sm">{recurrence ? `${recurrence}` : ""}</div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">

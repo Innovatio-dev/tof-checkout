@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-type PriceTable = Record<string, Record<string, Record<string, number>>>;
+type PriceEntry = { recurrence: string; platforms: Record<string, number> };
+type PriceTable = Record<string, Record<string, PriceEntry>>;
 type Option = { value: string; label: string };
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
@@ -24,61 +25,80 @@ const PLATFORM_LABELS: Record<string, string> = {
 const PRICE_TABLE: PriceTable = {
   "one-step-elite": {
     "25k": {
-      "tradovate-ninjatrader": 69,
+      recurrence: "monthly",
+      platforms: { "tradovate-ninjatrader": 69 },
     },
     "50k": {
-      "tradovate-ninjatrader": 105,
+      recurrence: "monthly",
+      platforms: { "tradovate-ninjatrader": 105 },
     },
     "100k": {
-      "tradovate-ninjatrader": 209,
+      recurrence: "monthly",
+      platforms: { "tradovate-ninjatrader": 209 },
     },
     "250k": {
-      "tradovate-ninjatrader": 309,
+      recurrence: "monthly",
+      platforms: { "tradovate-ninjatrader": 309 },
     },
   },
   "instant-sim-funded": {
     "25k": {
-      "tradovate-ninjatrader": 419,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 419 },
     },
     "50k": {
-      "tradovate-ninjatrader": 679,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 679 },
     },
     "100k": {
-      "tradovate-ninjatrader": 821,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 821 },
     },
     "250k": {
-      "tradovate-ninjatrader": 939,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 939 },
     },
   },
   "s2f-sim-pro": {
     "25k": {
-      "tradovate-ninjatrader": 257,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 257 },
     },
     "50k": {
-      "tradovate-ninjatrader": 421,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 421 },
     },
     "100k": {
-      "tradovate-ninjatrader": 632,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 632 },
     },
     "250k": {
-      "tradovate-ninjatrader": 727,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 727 },
     },
   },
   "ignite-instant": {
     "25k": {
-      "tradovate-ninjatrader": 218,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 218 },
     },
     "50k": {
-      "tradovate-ninjatrader": 398,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 398 },
     },
     "100k": {
-      "tradovate-ninjatrader": 563,
+      recurrence: "one time fee",
+      platforms: { "tradovate-ninjatrader": 563 },
     },
   },
 };
 
 const resolvePrice = (accountType: string, accountSize: string, platform: string) => {
-  return PRICE_TABLE[accountType]?.[accountSize]?.[platform] ?? null;
+  return PRICE_TABLE[accountType]?.[accountSize]?.platforms?.[platform] ?? null;
+};
+
+const resolveRecurrence = (accountType: string, accountSize: string) => {
+  return PRICE_TABLE[accountType]?.[accountSize]?.recurrence ?? null;
 };
 
 const buildAccountTypeOptions = () => {
@@ -99,9 +119,7 @@ const buildOptionsForAccountType = (accountType?: string) => {
   const sizes = Object.keys(PRICE_TABLE[accountType]);
   const platforms = Array.from(
     new Set(
-      Object.values(PRICE_TABLE[accountType]).flatMap((platforms) =>
-        Object.keys(platforms)
-      )
+      Object.values(PRICE_TABLE[accountType]).flatMap((entry) => Object.keys(entry.platforms))
     )
   );
 
@@ -139,10 +157,11 @@ export async function POST(request: NextRequest) {
   }
 
   const price = resolvePrice(accountType, accountSize, platform);
+  const recurrence = resolveRecurrence(accountType, accountSize);
 
-  if (price === null) {
+  if (price === null || recurrence === null) {
     return NextResponse.json({ error: "Price not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ price });
+  return NextResponse.json({ price, recurrence });
 }
