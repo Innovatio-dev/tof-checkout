@@ -67,6 +67,17 @@ export type WooOrder = {
   status: string;
   total: string;
   currency: string;
+  date_created?: string;
+  payment_method_title?: string;
+  billing?: {
+    email?: string;
+  };
+  line_items?: Array<{
+    id: number;
+    name: string;
+    quantity: number;
+    total: string;
+  }>;
 };
 
 export const getProducts = async (query?: Record<string, string | number | boolean | undefined>) => {
@@ -130,5 +141,11 @@ export type CreateOrderPayload = {
 export const createOrder = async (payload: CreateOrderPayload) => {
   const api = getWooCommerceApi();
   const response = await api.post("orders", payload);
+  return response.data as WooOrder;
+};
+
+export const getOrderById = async (orderId: number) => {
+  const api = getWooCommerceApi();
+  const response = await api.get(`orders/${orderId}`);
   return response.data as WooOrder;
 };

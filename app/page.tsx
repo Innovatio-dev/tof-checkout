@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, Lock, LockIcon, LockKeyholeIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import CountryCombobox from "@/components/custom/country-combobox";
 import Link from "next/link";
 import SnappFlag from "@/components/custom/snapp-flag";
@@ -21,6 +22,8 @@ import { Spinner } from "@/components/ui/spinner";
 import Modal from "@/components/custom/modal";
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const isTesting = searchParams?.get("testing") === "true";
   const [accountType, setAccountType] = useState("instant-sim-funded");
   const [accountSize, setAccountSize] = useState("50k");
   const [platform, setPlatform] = useState("tradovate-ninjatrader");
@@ -46,7 +49,7 @@ export default function Home() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(!isTesting);
   const [modalName, setModalName] = useState("");
   const [modalEmail, setModalEmail] = useState("");
   const [modalSubmitting, setModalSubmitting] = useState(false);
@@ -233,7 +236,12 @@ export default function Home() {
         throw new Error(data.error ?? "Failed to place order.");
       }
 
-      setSubmitSuccess("Order created successfully. We'll be in touch shortly.");
+      const data = (await response.json()) as { orderId?: number };
+      if (!data.orderId) {
+        throw new Error("Order created, but no order ID was returned.");
+      }
+      sessionStorage.setItem("tof_order_id", String(data.orderId));
+      window.location.href = "/thank-you";
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to place order.");
     } finally {
@@ -281,6 +289,12 @@ export default function Home() {
       isMounted = false;
     };
   }, [accountType, accountSize, platform]);
+
+  useEffect(() => {
+    if (isTesting) {
+      setIsModalOpen(false);
+    }
+  }, [isTesting]);
 
   useEffect(() => {
     let isMounted = true;

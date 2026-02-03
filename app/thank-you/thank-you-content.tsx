@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -35,12 +35,75 @@ const formatDate = (value: string | null) => {
 };
 
 const ThankYouContent = () => {
-  const searchParams = useSearchParams();
-  const orderNumber = searchParams.get("order") ?? "T1F-2025";
-  const email = searchParams.get("email") ?? "trader@example.com";
-  const total = searchParams.get("total") ?? "$0.00";
-  const paymentMethod = searchParams.get("payment") ?? "Card";
-  const orderDate = useMemo(() => formatDate(searchParams.get("date")), [searchParams]);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [order, setOrder] = useState<{
+    id: number;
+    total: string;
+    currency: string;
+    date_created?: string;
+    payment_method_title?: string;
+    billing?: { email?: string };
+    line_items?: Array<{ id: number; name: string; quantity: number; total: string }>;
+  } | null>(null);
+
+  useEffect(() => {
+    setOrderId(sessionStorage.getItem("tof_order_id"));
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadOrder = async () => {
+      if (!orderId) {
+        setOrderError("Missing order ID.");
+        return;
+      }
+
+      setOrderLoading(true);
+      setOrderError(null);
+      try {
+        const response = await fetch("/api/order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId }),
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(data?.error ?? "Failed to load order details.");
+        }
+        const data = (await response.json()) as { order?: typeof order };
+        if (!data.order) {
+          throw new Error("Order details were not returned.");
+        }
+        if (isMounted) {
+          setOrder(data.order);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setOrderError(error instanceof Error ? error.message : "Failed to load order details.");
+        }
+      } finally {
+        if (isMounted) {
+          setOrderLoading(false);
+        }
+      }
+    };
+
+    loadOrder();
+    return () => {
+      isMounted = false;
+    };
+  }, [orderId]);
+
+  const orderNumber = order?.id ? `${order?.id}` : orderId ?? "—";
+  const email = order?.billing?.email ?? "—";
+  const total = order?.total ? `$${order.total}` : "—";
+  const paymentMethod = order?.payment_method_title ?? "—";
+  const orderDate = useMemo(
+    () => formatDate(order?.date_created ?? null),
+    [order?.date_created]
+  );
 
   const overviewItems = [
     { label: "Order number", value: `#${orderNumber}` },
@@ -49,6 +112,18 @@ const ThankYouContent = () => {
     { label: "Total", value: total },
     { label: "Payment method", value: paymentMethod },
   ];
+
+  if (orderLoading) {
+    return <div className="py-16 text-white/70">Loading order details...</div>;
+  }
+
+  if (orderError) {
+    return (
+      <div className="rounded-3xl border border-white/10 bg-white/5 px-8 py-10 text-white/70">
+        {orderError}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-10 py-10">
@@ -118,16 +193,22 @@ const ThankYouContent = () => {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
-                <span className="text-sm text-white/60">Account package</span>
-                <span className="text-base font-semibold text-white">Instant Sim Funded</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-sm text-white/60">Platform</span>
-                <span className="text-base font-semibold text-white">Tradovate + NinjaTrader</span>
+                <span className="text-sm text-white/60">Primary item</span>
+                <span className="text-base font-semibold text-white">
+                  {order?.line_items?.[0]?.name ?? "—"}
+                </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-sm text-white/60">Quantity</span>
-                <span className="text-base font-semibold text-white">1</span>
+                <span className="text-base font-semibold text-white">
+                  {order?.line_items?.[0]?.quantity ?? "—"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-white/60">Line total</span>
+                <span className="text-base font-semibold text-white">
+                  {order?.line_items?.[0]?.total ? `$${order.line_items[0].total}` : "—"}
+                </span>
               </div>
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <span className="text-sm text-white/60">Total</span>
