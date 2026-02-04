@@ -9,7 +9,7 @@ interface SessionResponse {
     cashierToken: string
 }
 
-interface PayResponse {
+export interface PayResponse {
     cashierKey: string
     cashierToken: string
 }
@@ -19,6 +19,7 @@ interface BodyPayload {
     currency: string
     country: string
     amount: number
+    quantity: number
     firstName: string
     lastName: string
     phone: string

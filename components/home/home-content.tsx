@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRightIcon, LockIcon, MinusIcon, PlusIcon } from "lucide-react";
 
@@ -20,6 +20,8 @@ import { countries } from "@/lib/countries";
 import IpDetectorBlock from "@/components/custom/ip-detector-block";
 import { Spinner } from "@/components/ui/spinner";
 import InitModal from "@/components/home/init-modal";
+import { PayResponse } from "@/app/api/bridger/pay/route";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export default function HomeContent() {
   const searchParams = useSearchParams();
@@ -50,6 +52,9 @@ export default function HomeContent() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState<{ cashierKey: string; cashierToken: string } | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const accountTypeLabel = useMemo(() => {
     return accountTypeOptions.find((option) => option.value === accountType)?.label ?? accountType;
@@ -73,6 +78,35 @@ export default function HomeContent() {
     }).format(price);
   }, [price]);
 
+  useEffect(() => {
+    if (!paymentModalOpen) {
+      return
+    }
+
+    const scriptId = "bridger-iframe-resizer"
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script")
+      script.id = scriptId
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.9/iframeResizer.min.js"
+      script.integrity = "sha512-+bpyZqiNr/4QlUd6YnrAeLXzgooA1HKN5yUagHgPSMACPZgj8bkpCyZezPtDy5XbviRm4w8Z1RhfuWyoWaeCyg=="
+      script.crossOrigin = "anonymous"
+      script.referrerPolicy = "no-referrer"
+      document.body.appendChild(script)
+    }
+  }, [paymentModalOpen])
+
+  const handleIframeLoad = () => {
+    const iframe = iframeRef.current
+    if (!iframe) {
+      return
+    }
+
+    const resize = (window as Window & { iFrameResize?: (options: { checkOrigin: boolean }, target: string | HTMLElement) => void })
+      .iFrameResize
+
+    resize?.({ checkOrigin: false }, iframe)
+  }
+
   const formattedTotalPrice = useMemo(() => {
     if (price === null) {
       return "—";
@@ -83,6 +117,30 @@ export default function HomeContent() {
       currency: "USD",
     }).format(total);
   }, [price, quantity]);
+
+  /* MARK: Payment Modal */
+  const iframeSrcDoc = useMemo(() => {
+    if (!paymentData) {
+      return "";
+    }
+
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.9/iframeResizer.contentWindow.min.js' integrity='sha512-mdT/HQRzoRP4laVz49Mndx6rcCGA3IhuyhP3gaY0E9sZPkwbtDk9ttQIq9o8qGCf5VvJv1Xsy3k2yTjfUoczqw==' crossorigin='anonymous' referrerpolicy='no-referrer'></script>
+    <style>html,body{margin:0;padding:0;background:transparent}</style>
+  </head>
+  <body>
+    <script src='https://checkout.bridgerpay.com/v2/launcher'
+      data-cashier-key='${paymentData.cashierKey}'
+      data-cashier-token='${paymentData.cashierToken}'
+    ></script>
+    <script>
+      window.addEventListener('[bp]:redirect', ({ detail: { url } }) => window.top.location.href = url)
+    </script>
+  </body>
+</html>`;
+  }, [paymentData]);
 
   const selectedCountry = useMemo(
     () => countries.find((country) => country.code === countryCode),
@@ -155,16 +213,18 @@ export default function HomeContent() {
     return Object.keys(errors).length === 0;
   };
 
+  /* MARK: Submit function */
   const handleSubmit = async () => {
-    setSubmitError(null);
-    setSubmitSuccess(null);
+    setSubmitError(null)
+    setSubmitSuccess(null)
     if (!validateForm()) {
-      return;
+      return
     }
 
-    setSubmitLoading(true);
+    setSubmitLoading(true)
     try {
-      const response = await fetch("/api/checkout", {
+      // Create an order in the database of WooCommerce
+      const wooresponse = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -184,25 +244,61 @@ export default function HomeContent() {
           platform,
           newsletter,
         }),
-      });
+      })
 
-      if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
-        throw new Error(data.error ?? "Failed to place order.");
+      if (!wooresponse.ok) {
+        const data = (await wooresponse.json()) as { error?: string }
+        throw new Error(data.error ?? "Failed to place order.")
       }
 
-      const data = (await response.json()) as { orderId?: number };
-      if (!data.orderId) {
-        throw new Error("Order created, but no order ID was returned.");
+      // Get the order ID from the response
+      const wooData = (await wooresponse.json()) as { orderId?: number }
+      if (!wooData.orderId) {
+        throw new Error("Order created, but no order ID was returned.")
       }
-      sessionStorage.setItem("tof_order_id", String(data.orderId));
-      window.location.href = "/thank-you";
+
+      // Store the order ID in sessionStorage
+      sessionStorage.setItem("tof_order_id", String(wooData.orderId))
+
+      // Start payment process with Bridger Pay
+      const bridgerResponse = await fetch("/api/bridger/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: String(wooData.orderId),
+          currency: "USD",
+          country: countryCode,
+          amount: (price ?? 0),
+          quantity,
+          firstName,
+          lastName,
+          phone: `${phoneCode}${phoneNumber}`,
+          email,
+          address: address1,
+          address2: address2 || undefined,
+          city,
+          state: "",
+          zipCode: postcode,
+        }),
+      })
+
+      const bridgerData = (await bridgerResponse.json()) as PayResponse
+      if (!bridgerData.cashierKey || !bridgerData.cashierToken) {
+        throw new Error("Failed to start payment process.")
+      }
+
+      const { cashierKey, cashierToken } = bridgerData
+      setPaymentData({ cashierKey, cashierToken })
+      setPaymentModalOpen(true)
+
+      // Redirect to the payment page
+      // window.location.href = "/thank-you"
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Failed to place order.");
+      setSubmitError(error instanceof Error ? error.message : "Failed to place order.")
     } finally {
-      setSubmitLoading(false);
+      setSubmitLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -285,6 +381,19 @@ export default function HomeContent() {
 
   return (
     <div className="flex flex-col gap-16 font-sans text-white">
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="max-w-[960px] w-[96vw] p-4 sm:p-6" showCloseButton>
+          <div className="w-full">
+            <iframe
+              ref={iframeRef}
+              title="Bridger Pay Checkout"
+              srcDoc={iframeSrcDoc}
+              className="w-full min-h-[620px] rounded-xl border border-white/10"
+              onLoad={handleIframeLoad}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* MARK: Init Modal */}
       <InitModal defaultOpen={!isTesting} isTesting={isTesting} />
       <div>
