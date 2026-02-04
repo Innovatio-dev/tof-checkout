@@ -28,6 +28,7 @@ export default $config({
         BRIDGER_PAY_EMBED_URL: process.env.BRIDGER_PAY_EMBED_URL!,
         SSM_AWS_KEY: process.env.SSM_AWS_KEY!,
         SSM_AWS_PRIVATE_KEY: process.env.SSM_AWS_PRIVATE_KEY!,
+        APP_DEBUG: "false",
       },
     });
   },

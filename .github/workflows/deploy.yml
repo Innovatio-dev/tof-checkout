@@ -42,6 +42,7 @@ jobs:
           BRIDGER_PAY_EMBED_URL=${{ secrets.BRIDGER_PAY_EMBED_URL }}
           SSM_AWS_KEY=${{ secrets.SSM_AWS_KEY }}
           SSM_AWS_PRIVATE_KEY=${{ secrets.SSM_AWS_PRIVATE_KEY }}
+          APP_DEBUG=false
           EOF
       
       - name: Install dependencies
