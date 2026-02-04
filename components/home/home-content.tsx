@@ -183,7 +183,7 @@ export default function HomeContent() {
     ></script>
     <script>
       window.dispatchEvent(
-        new CustomEvent('[bp][checkout:${process.env.BRIDGER_PAY_CHECKOUT_KEY}]:wallet-open-applepay-overlay')
+        new CustomEvent('[bp][checkout:${paymentData.cashierKey}]:wallet-open-applepay-overlay')
       )
     </script>
   </body>
