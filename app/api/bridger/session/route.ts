@@ -21,7 +21,7 @@ interface SessionResponse {
 
 export async function POST(request: NextRequest) {
     const body = await request.json()
-    const { orderId, accessToken, cashierKey, currency, country, amount, firstName, lastName, phone, email, address, city, state, zipCode } = body
+    const { orderId, accessToken, cashierKey, currency, country, amount, firstName, lastName, phone, email, address, address2, city, state, zipCode } = body
 
     if (!orderId || !accessToken || !cashierKey || !currency || !country || !amount || !firstName || !lastName || !phone || !email || !address || !city || !state || !zipCode) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
             last_name: lastName,
             phone: phone,
             email: email,
-            address: address,
+            address: `${address}${address2 && `, ${address2}`}`,
             city: city,
             state: state,
             zip_code: zipCode,
