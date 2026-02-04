@@ -24,6 +24,7 @@ import { PayResponse } from "@/app/api/bridger/pay/route";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useUserStore } from "@/lib/user-store";
 import { useShallow } from "zustand/react/shallow";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 export default function HomeContent() {
   const searchParams = useSearchParams();
@@ -35,6 +36,7 @@ export default function HomeContent() {
   const [price, setPrice] = useState<number | null>(null);
   const [recurrence, setRecurrence] = useState<string | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("credit-card");
   const [accountTypeOptions, setAccountTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [accountSizeOptions, setAccountSizeOptions] = useState<{ value: string; label: string }[]>([]);
   const [platformOptions, setPlatformOptions] = useState<{ value: string; label: string }[]>([]);
@@ -162,6 +164,33 @@ export default function HomeContent() {
   </body>
 </html>`;
   }, [paymentData]);
+
+  const walletIframeSrcDoc = useMemo(() => {
+    if (!paymentData) {
+      return "";
+    }
+
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <script crossorigin src='https://applepay.cdn-apple.com/jsapi/v1.3.1/apple-pay-sdk.js'></script>
+  </head>
+  <body>
+    <script src='https://checkout.bridgerpay.com/v2/launcher'
+      data-cashier-key='${paymentData.cashierKey}'
+      data-cashier-token='${paymentData.cashierToken}'
+      data-button-mode='wallet'
+    ></script>
+    <script>
+      window.dispatchEvent(
+        new CustomEvent('[bp][checkout:${process.env.BRIDGER_PAY_CHECKOUT_KEY}]:wallet-open-applepay-overlay')
+      )
+    </script>
+  </body>
+</html>`;
+  }, [paymentData]);
+
+  const activeIframeSrcDoc = paymentMethod === "wallet" ? walletIframeSrcDoc : iframeSrcDoc;
 
   const selectedCountry = useMemo(
     () => countries.find((country) => country.code === countryCode),
@@ -405,11 +434,12 @@ export default function HomeContent() {
       {/* MARK: Payment Modal */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
         <DialogContent className="max-w-[960px] w-[96vw] p-1 bg-[#363636] rounded-2xl" showCloseButton={false}>
+          <DialogTitle className="sr-only">Bridger Pay Checkout</DialogTitle>
           <div className="w-full">
             <iframe
               ref={iframeRef}
               title="Bridger Pay Checkout"
-              srcDoc={iframeSrcDoc}
+              srcDoc={activeIframeSrcDoc}
               className="w-full"
               onLoad={handleIframeLoad}
             />
@@ -651,7 +681,7 @@ export default function HomeContent() {
             <div className="flex flex-col gap-10">
               <div className="flex flex-col gap-6">
                 <h4 className="text-xl font-semibold">Choose payment method</h4>
-                <RadioGroup defaultValue="credit-card" className="flex flex-col gap-4">
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="flex flex-col gap-4">
                   <PaymentRadioItem
                     id="credit-card"
                     value="credit-card"
