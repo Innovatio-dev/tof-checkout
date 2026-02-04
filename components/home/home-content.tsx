@@ -22,6 +22,8 @@ import { Spinner } from "@/components/ui/spinner";
 import InitModal from "@/components/home/init-modal";
 import { PayResponse } from "@/app/api/bridger/pay/route";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useUserStore } from "@/lib/user-store";
+import { useShallow } from "zustand/react/shallow";
 
 export default function HomeContent() {
   const searchParams = useSearchParams();
@@ -55,6 +57,13 @@ export default function HomeContent() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentData, setPaymentData] = useState<{ cashierKey: string; cashierToken: string } | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const { email: storedEmail, firstName: storedFirstName, lastName: storedLastName } = useUserStore(
+    useShallow((state) => ({
+      email: state.email,
+      firstName: state.firstName,
+      lastName: state.lastName,
+    }))
+  );
 
   const accountTypeLabel = useMemo(() => {
     return accountTypeOptions.find((option) => option.value === accountType)?.label ?? accountType;
@@ -77,6 +86,18 @@ export default function HomeContent() {
       currency: "USD",
     }).format(price);
   }, [price]);
+
+  useEffect(() => {
+    if (storedEmail && !email) {
+      setEmail(storedEmail)
+    }
+    if (storedFirstName && !firstName) {
+      setFirstName(storedFirstName)
+    }
+    if (storedLastName && !lastName) {
+      setLastName(storedLastName)
+    }
+  }, [email, firstName, lastName, storedEmail, storedFirstName, storedLastName])
 
   useEffect(() => {
     if (!paymentModalOpen) {

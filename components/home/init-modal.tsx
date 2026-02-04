@@ -9,6 +9,7 @@ import Modal from "@/components/custom/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useUserStore } from "@/lib/user-store";
 
 interface InitModalProps {
   defaultOpen?: boolean;
@@ -24,6 +25,7 @@ export default function InitModal({
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const setUserProfile = useUserStore((state) => state.setUserProfile);
 
   const emailValid = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
   const nameValid = useMemo(() => name.trim().length > 1, [name]);
@@ -35,7 +37,8 @@ export default function InitModal({
     }
   }, [isTesting]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!formValid || submitting) {
       return;
     }
@@ -63,6 +66,7 @@ export default function InitModal({
         throw new Error(data?.error ?? "Subscription failed. Please try again.");
       }
 
+      setUserProfile({ email, firstName, lastName: lastNameParts.join(" ") });
       setMessage("Thanks! You're in.");
       setOpen(false);
     } catch (error) {
@@ -88,7 +92,7 @@ export default function InitModal({
           Have an account? Log In
         </Link>
       </div>
-      <div className="flex flex-col gap-4 w-full max-w-[360px] mx-auto">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-[360px] mx-auto">
         <Input
           placeholder="Enter your full name"
           value={name}
@@ -105,11 +109,11 @@ export default function InitModal({
           aria-invalid={!emailValid && email.length > 0}
         />
         <Button
+          type="submit"
           size="lg"
           className="w-full font-bold h-12 white-glow bg-dark-gray text-white hover:bg-dark-gray/90"
           variant="primary"
           disabled={!formValid || submitting}
-          onClick={handleSubmit}
         >
           {submitting ? "Loading..." : "Continue to checkout"}
           {submitting ? (
@@ -125,7 +129,7 @@ export default function InitModal({
           <span className="underline underline-offset-4">Terms and Conditions</span> *
         </p>
         {message ? <p className="text-sm text-gray-600">{message}</p> : null}
-      </div>
+      </form>
     </Modal>
   );
 }

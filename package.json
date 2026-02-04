@@ -32,7 +32,8 @@
     "react-flagpack": "^2.0.6",
     "sonner": "^2.0.7",
     "sst": "3.17.38",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

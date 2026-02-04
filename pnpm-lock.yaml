@@ -77,6 +77,9 @@ dependencies:
   tailwind-merge:
     specifier: ^3.4.0
     version: 3.4.0
+  zustand:
+    specifier: ^5.0.11
+    version: 5.0.11(@types/react@19.2.9)(react@19.2.3)
 
 devDependencies:
   '@tailwindcss/postcss':
@@ -5396,3 +5399,25 @@ packages:
   /zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
     dev: true
+
+  /zustand@5.0.11(@types/react@19.2.9)(react@19.2.3):
+    resolution: {integrity: sha512-fdZY+dk7zn/vbWNCYmzZULHRrss0jx5pPFiOuMZ/5HJN6Yv3u+1Wswy/4MpZEkEGhtNH+pwxZB8OKgUBPzYAGg==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
+    dependencies:
+      '@types/react': 19.2.9
+      react: 19.2.3
+    dev: false
