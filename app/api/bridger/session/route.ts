@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { debugError, debugLog } from "@/lib/debug"
+
 interface BridgerSessionResponse {
     response: {
         status: string
@@ -23,10 +25,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { orderId, accessToken, cashierKey, currency, country, amount, firstName, lastName, phone, email, address, address2, city, state, zipCode } = body
 
-    console.log("[DEBUG::Session] Incoming request", body)
+    debugLog("[DEBUG::Session] Incoming request", body)
 
     if (!orderId || !accessToken || !cashierKey || !currency || !country || !amount || !firstName || !lastName || !phone || !email || !address || !city || !zipCode) {
-        console.log("[DEBUG::Session] Missing required fields")
+        debugLog("[DEBUG::Session] Missing required fields")
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        console.log("[DEBUG::Session] Creating session", { orderId })
+        debugLog("[DEBUG::Session] Creating session", { orderId })
         const response = await fetch(url, options)
         const data = await response.json() as BridgerSessionResponse
 
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
             const message = Array.isArray(data.result)
                 ? data.result.map((entry) => entry.message).join(", ")
                 : data.response.message
-            console.log("[DEBUG::Session] Session creation failed", { code: data.response.code, message })
+            debugLog("[DEBUG::Session] Session creation failed", { code: data.response.code, message })
             throw new Error(message)
         }
 
@@ -75,10 +77,10 @@ export async function POST(request: NextRequest) {
             cashierToken: data.result.cashier_token
         }
 
-        console.log("[DEBUG::Session] Session created", { orderId, cashierToken: session.cashierToken })
+        debugLog("[DEBUG::Session] Session created", { orderId, cashierToken: session.cashierToken })
         return NextResponse.json(session)
     } catch (error) {
-        console.error("[DEBUG::Session] Unexpected error", error)
+        debugError("[DEBUG::Session] Unexpected error", error)
         return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to create session" }, { status: 499 })
     }
 }
