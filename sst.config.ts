@@ -12,6 +12,7 @@ export default $config({
   },
   async run() {
     new sst.aws.Nextjs("MyWeb", {
+      runtime: "nodejs22.x",
       environment: {
         WP_SITE_URL: process.env.WP_SITE_URL!,
         WP_CONSUMER_KEY: process.env.WP_CONSUMER_KEY!,
