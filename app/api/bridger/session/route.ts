@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
             theme: 'dark',
-            custom_data: {Parameter1: '20/05/2023', Parameter2: '123456'},
+            // custom_data: {Parameter1: '20/05/2023', Parameter2: '123456'},
             cashier_key: cashierKey,
             order_id: orderId,
             currency: currency,
