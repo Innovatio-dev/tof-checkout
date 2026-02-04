@@ -118,7 +118,7 @@ export default function HomeContent() {
     }).format(total);
   }, [price, quantity]);
 
-  /* MARK: Payment Modal */
+  /* MARK: Payment Iframe */
   const iframeSrcDoc = useMemo(() => {
     if (!paymentData) {
       return "";
@@ -381,19 +381,21 @@ export default function HomeContent() {
 
   return (
     <div className="flex flex-col gap-16 font-sans text-white">
+      {/* MARK: Payment Modal */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="max-w-[960px] w-[96vw] p-4 sm:p-6" showCloseButton>
+        <DialogContent className="max-w-[960px] w-[96vw] p-1 bg-[#363636] rounded-2xl" showCloseButton={false}>
           <div className="w-full">
             <iframe
               ref={iframeRef}
               title="Bridger Pay Checkout"
               srcDoc={iframeSrcDoc}
-              className="w-full min-h-[620px] rounded-xl border border-white/10"
+              className="w-full"
               onLoad={handleIframeLoad}
             />
           </div>
         </DialogContent>
       </Dialog>
+
       {/* MARK: Init Modal */}
       <InitModal defaultOpen={!isTesting} isTesting={isTesting} />
       <div>
