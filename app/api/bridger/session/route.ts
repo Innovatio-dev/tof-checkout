@@ -6,9 +6,17 @@ interface BridgerSessionResponse {
         code: number
         message: string
     }
-    result: {
+    result: | {
         cashier_token: string
     }
+    | Array<{
+        type: string
+        message: string
+    }>
+}
+
+interface SessionResponse {
+    cashierToken: string
 }
 
 export async function POST(request: NextRequest) {
@@ -46,9 +54,21 @@ export async function POST(request: NextRequest) {
     try {
         const response = await fetch(url, options)
         const data = await response.json() as BridgerSessionResponse
-        return NextResponse.json(data)
+
+        if (data.response.code !== 200 || !data.result || Array.isArray(data.result)) {
+            const message = Array.isArray(data.result)
+                ? data.result.map((entry) => entry.message).join(", ")
+                : data.response.message
+            throw new Error(message)
+        }
+
+        const session: SessionResponse = {
+            cashierToken: data.result.cashier_token
+        }
+
+        return NextResponse.json(session)
     } catch (error) {
         console.error(error)
-        return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to create session" }, { status: 500 })
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to create session" }, { status: 499 })
     }
 }
