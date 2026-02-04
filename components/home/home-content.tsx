@@ -660,8 +660,8 @@ export default function HomeContent() {
                     availableMethods="visa, amex, mastercard, crypto, tether"
                   />
                   <PaymentRadioItem
-                    id="paypal"
-                    value="paypal"
+                    id="wallet"
+                    value="wallet"
                     title="Pay with Google or Apple Pay"
                     availableMethods="apple pay, google pay"
                   />

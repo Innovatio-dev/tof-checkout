@@ -52,7 +52,7 @@ const PaymentRadioItem = ({ id, value, title, subtitle, availableMethods }: Paym
       <label
         htmlFor={id}
         className={cn(
-          "flex flex-col md:flex-row md:items-center md:justify-between md:gap-6 gap-4 rounded-2xl border md:p-6 p-5 cursor-pointer min-h-28",
+          "flex flex-col md:flex-row md:items-center md:justify-between md:gap-6 gap-4 rounded-2xl border md:px-5 px-4 py-1 cursor-pointer min-h-26",
           "border-white/10 bg-white/8",
           "transition-colors",
           "hover:border-white/30",
