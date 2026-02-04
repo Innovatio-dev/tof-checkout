@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { orderId, accessToken, cashierKey, currency, country, amount, firstName, lastName, phone, email, address, city, state, zipCode } = body
 
+    if (!orderId || !accessToken || !cashierKey || !currency || !country || !amount || !firstName || !lastName || !phone || !email || !address || !city || !state || !zipCode) {
+        return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
     const url = `${process.env.BRIDGER_PAY_API_URL}/v2/cashier/session/create/${orderId}`
     const options = {
         method: 'POST',
