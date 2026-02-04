@@ -33,6 +33,15 @@ jobs:
           # Newsletter keys
           NEWSLETTER_CLIENT_ID=${{ secrets.NEWSLETTER_CLIENT_ID }}
           NEWSLETTER_CLIENT_SECRET=${{ secrets.NEWSLETTER_CLIENT_SECRET }}
+          BRIDGER_PAY_ACTIVATION_KEY=${{ secrets.BRIDGER_PAY_ACTIVATION_KEY }}
+          BRIDGER_PAY_USERNAME=${{ secrets.BRIDGER_PAY_USERNAME }}
+          BRIDGER_PAY_PASSWORD="${{ secrets.BRIDGER_PAY_PASSWORD }}"
+          BRIDGER_PAY_API_KEY=${{ secrets.BRIDGER_PAY_API_KEY }}
+          BRIDGER_PAY_CASHIER_KEY=${{ secrets.BRIDGER_PAY_CASHIER_KEY }}
+          BRIDGER_PAY_API_URL=${{ secrets.BRIDGER_PAY_API_URL }}
+          BRIDGER_PAY_EMBED_URL=${{ secrets.BRIDGER_PAY_EMBED_URL }}
+          SSM_AWS_KEY=${{ secrets.SSM_AWS_KEY }}
+          SSM_AWS_PRIVATE_KEY=${{ secrets.SSM_AWS_PRIVATE_KEY }}
           EOF
       
       - name: Install dependencies
