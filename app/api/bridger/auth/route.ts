@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
     let refreshToken: string | null = null;
     let expires: number | null = null; // This is not expiresAt, but expiresIn seconds
     let createdAt: number | null = null;
-    let ssm: AWS.SSM;
+    let ssm: AWS.SSM | null = null;
+
+    console.log("[DEBUG::Auth] Incoming request")
 
     try {
         ssm = new AWS.SSM({
@@ -51,14 +53,17 @@ export async function POST(request: NextRequest) {
             secretAccessKey: process.env.SSM_AWS_PRIVATE_KEY,
             region: 'us-east-1',
         });
+        console.log("[DEBUG::Auth] AWS SSM initialized")
 
         const tokenGetter = await ssm.getParameter({
             Name: "BridgerTokenObject",
             WithDecryption: true,
         }).promise();
+        console.log("[DEBUG::Auth] AWS SSM parameter store initialized")
 
         // Get the token from the SSM parameter store
         if (tokenGetter.Parameter?.Value) {
+            console.log("[DEBUG::Auth] Token found in SSM")
             const tokenObject = JSON.parse(tokenGetter.Parameter.Value);
             token = tokenObject.token;
             refreshToken = tokenObject.refreshToken;
@@ -68,16 +73,28 @@ export async function POST(request: NextRequest) {
 
         // If the token is valid, return it
         if (token && refreshToken && expires && createdAt) {
+            console.log("[DEBUG::Auth] Token is valid, checking expiration")
             if (expires < 120) expires = 7000;
             // 120 seconds buffer
             if (now < createdAt + (expires - 120)) {
+                console.log("[DEBUG::Auth] Returning cached token", { expires, createdAt })
                 return NextResponse.json({ token, refreshToken, expires, createdAt });
             }
         }
     } catch (error) {
-        console.error(error)
-        return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to authenticate on AWS" }, { status: 401 })
+        const errorCode = error instanceof Error ? (error as Error & { code?: string }).code : undefined
+        if (errorCode === "ParameterNotFound") {
+            console.log("[DEBUG::Auth] Token not found in SSM, requesting new one")
+        } else {
+            console.error("[DEBUG::Auth] Failed to load token from SSM", error)
+            return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to authenticate on AWS" }, { status: 401 })
+        }
     }
+    if (!ssm) {
+        return NextResponse.json({ error: "Failed to initialize AWS SSM" }, { status: 401 })
+    }
+
+    console.log("[DEBUG::Auth] Token is not valid, getting a new one")
 
     // If the token is not valid then let's get a new one
     const url = `${process.env.BRIDGER_PAY_API_URL}/v2/auth/login`
@@ -88,6 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        console.log("[DEBUG::Auth] Requesting new token", { url })
         const response = await fetch(url, options)
         const data = await response.json() as BridgerAuthResponse
 
@@ -95,6 +113,7 @@ export async function POST(request: NextRequest) {
             const errorMessage = Array.isArray(data.result)
                 ? data.result.map((item) => item.message).join(", ")
                 : data.response.message
+            console.log("[DEBUG::Auth] Token request failed", { code: data.response.code, message: errorMessage })
             throw new Error(errorMessage)
         }
 
@@ -113,9 +132,10 @@ export async function POST(request: NextRequest) {
             Overwrite: true,
         }).promise();
 
+        console.log("[DEBUG::Auth] Token stored", { expires: auth.expires, createdAt: auth.createdAt })
         return NextResponse.json(auth)
     } catch (error) {
-        console.error(error)
+        console.error("[DEBUG::Auth] Authentication failed", error)
         return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to authenticate with Bridger Pay." }, { status: 401 })
     }
 }

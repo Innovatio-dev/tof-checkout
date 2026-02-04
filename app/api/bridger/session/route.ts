@@ -23,11 +23,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { orderId, accessToken, cashierKey, currency, country, amount, firstName, lastName, phone, email, address, address2, city, state, zipCode } = body
 
-    if (!orderId || !accessToken || !cashierKey || !currency || !country || !amount || !firstName || !lastName || !phone || !email || !address || !city || !state || !zipCode) {
+    console.log("[DEBUG::Session] Incoming request", body)
+
+    if (!orderId || !accessToken || !cashierKey || !currency || !country || !amount || !firstName || !lastName || !phone || !email || !address || !city || !zipCode) {
+        console.log("[DEBUG::Session] Missing required fields")
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const url = `${process.env.BRIDGER_PAY_API_URL}/v2/cashier/session/create/${orderId}`
+    const url = `${process.env.BRIDGER_PAY_API_URL}/v2/cashier/session/create/${process.env.BRIDGER_PAY_API_KEY}`
     const options = {
         method: 'POST',
         headers: {
@@ -56,6 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        console.log("[DEBUG::Session] Creating session", { orderId })
         const response = await fetch(url, options)
         const data = await response.json() as BridgerSessionResponse
 
@@ -63,6 +67,7 @@ export async function POST(request: NextRequest) {
             const message = Array.isArray(data.result)
                 ? data.result.map((entry) => entry.message).join(", ")
                 : data.response.message
+            console.log("[DEBUG::Session] Session creation failed", { code: data.response.code, message })
             throw new Error(message)
         }
 
@@ -70,9 +75,10 @@ export async function POST(request: NextRequest) {
             cashierToken: data.result.cashier_token
         }
 
+        console.log("[DEBUG::Session] Session created", { orderId, cashierToken: session.cashierToken })
         return NextResponse.json(session)
     } catch (error) {
-        console.error(error)
+        console.error("[DEBUG::Session] Unexpected error", error)
         return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to create session" }, { status: 499 })
     }
 }
