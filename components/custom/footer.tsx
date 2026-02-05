@@ -79,27 +79,27 @@ const Footer = () => {
           <div className="flex flex-col gap-4 text-white/60 w-full sm:w-auto">
             <h5 className="text-white text-xl">Navigation</h5>
             <ul className="flex flex-col gap-2">
-              <li><Link href="/" className="hover:text-white">Home</Link></li>
-              <li><Link href="/about" className="hover:text-white">Affiliate program</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Dashboard Sign in</Link></li>
+              <li><Link href="//toponefutures.com" className="hover:text-white">Home</Link></li>
+              <li><Link href="//toponefutures.com/affiliate-program" className="hover:text-white">Affiliate program</Link></li>
+              <li><Link href="//portal.toponefutures.com/sign-in" className="hover:text-white">Dashboard Sign in</Link></li>
             </ul>
           </div>
           <div className="flex flex-col gap-4 text-white/60 w-full sm:w-auto">
             <h5 className="text-white text-xl">Contact</h5>
             <ul className="flex flex-col gap-2">
-              <li><Link href="/" className="hover:text-white">Contact us</Link></li>
-              <li><Link href="/about" className="hover:text-white">FAQ&apos;s</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Discord</Link></li>
+              <li><Link href="//toponefutures.com/contact-us" className="hover:text-white">Contact us</Link></li>
+              <li><Link href="//intercom.help/top-one-futures/en" className="hover:text-white">FAQ&apos;s</Link></li>
+              <li><Link href="//discord.com/invite/6wTPNM9XwN" className="hover:text-white">Discord</Link></li>
             </ul>
           </div>
           <div className="flex flex-col gap-4 text-white/60 w-full sm:w-auto">
             <h5 className="text-white text-xl">Social Media</h5>
             <ul className="flex flex-col gap-2">
-              <li><Link href="/" className="hover:text-white">Facebook</Link></li>
-              <li><Link href="/about" className="hover:text-white">X</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Instagram</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Youtube</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Discord</Link></li>
+              <li><Link href="//www.facebook.com/profile.php?id=61574715302595" className="hover:text-white">Facebook</Link></li>
+              <li><Link href="//x.com/TopOneFutures" className="hover:text-white">X</Link></li>
+              <li><Link href="//www.instagram.com/toponefuturesofficial/" className="hover:text-white">Instagram</Link></li>
+              <li><Link href="//www.youtube.com/channel/UCWoWTvvwhfuAqDuxYJHa03Q" className="hover:text-white">Youtube</Link></li>
+              <li><Link href="//discord.com/invite/6wTPNM9XwN" className="hover:text-white">Discord</Link></li>
             </ul>
           </div>
         </div>
@@ -110,8 +110,8 @@ const Footer = () => {
             <div className="max-w-56">1621 Central Ave, Suite 8433 Cheyenne WY 82001</div>
           </div>
           <div className="hidden sm:flex gap-8">
-            <Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white">Terms of Use</Link>
+            <Link href="//toponefutures.com/terms-and-conditions" className="hover:text-white">Terms and Conditions</Link>
+            <Link href="//toponefutures.com/privacy-policy" className="hover:text-white">Privacy Policy</Link>
           </div>
         </div>
         <div className="text-white/60 text-sm flex flex-col gap-2">

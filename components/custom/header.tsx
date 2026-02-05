@@ -13,7 +13,7 @@ const Header = () => {
           <Link href="https://portal.toponefutures.com" target="_blank" rel="noreferrer">
             <Button variant="outline" size="lg">Log In</Button>
           </Link>
-          <Button variant="primary" size="lg" className="hidden md:block">Start Trading NOW</Button>
+          {/* <Button variant="primary" size="lg" className="hidden md:block">Start Trading NOW</Button> */}
         </div>
       </div>
     </header>
