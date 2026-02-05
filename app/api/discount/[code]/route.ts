@@ -30,8 +30,12 @@ interface CouponResponseData {
   email_restrictions?: string[];
 }
 
-export async function GET(_request: NextRequest, { params }: { params: { code: string } }) {
-  const code = params.code?.trim();
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ code: string }> }
+) {
+  const resolvedParams = await params;
+  const code = resolvedParams.code?.trim();
   if (!code) {
     return NextResponse.json({ error: "Missing coupon code." }, { status: 400 });
   }
