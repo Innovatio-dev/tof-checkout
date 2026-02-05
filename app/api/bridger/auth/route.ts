@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     let expires: number | null = null; // This is not expiresAt, but expiresIn seconds
     let createdAt: number | null = null;
     let ssm: AWS.SSM | null = null;
+    const ssmName = "BridgerTokenObject"
 
     debugLog("[DEBUG::Auth] Incoming request")
 
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
         debugLog("[DEBUG::Auth] AWS SSM initialized")
 
         const tokenGetter = await ssm.getParameter({
-            Name: "BridgerTokenObject",
+            Name: ssmName,
             WithDecryption: true,
         }).promise();
         debugLog("[DEBUG::Auth] AWS SSM parameter store initialized")
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
 
         // Save the token to the SSM parameter store
         await ssm.putParameter({
-            Name: "BridgerTokenObject",
+            Name: ssmName,
             Value: JSON.stringify(auth),
             Type: 'SecureString',
             Overwrite: true,
