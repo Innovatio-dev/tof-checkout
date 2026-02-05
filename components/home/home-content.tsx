@@ -19,6 +19,7 @@ import SnappFlag from "@/components/custom/snapp-flag";
 import { countries } from "@/lib/countries";
 import IpDetectorBlock from "@/components/custom/ip-detector-block";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import InitModal from "@/components/home/init-modal";
 import { PayResponse } from "@/app/api/bridger/pay/route";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -653,7 +654,13 @@ export default function HomeContent() {
                     <PlusIcon />
                   </Button>
                 </div>
-                <div className="text-sm md:text-base min-w-[72px] text-right">{formattedPrice}</div>
+                <div className="text-sm md:text-base min-w-[72px] text-right">
+                  {priceLoading ? (
+                    <Skeleton className="h-4 w-[72px] bg-white/10" />
+                  ) : (
+                    formattedPrice
+                  )}
+                </div>
               </div>
             </div>
 
@@ -663,7 +670,11 @@ export default function HomeContent() {
               <div>Total</div>
               <div className="flex flex-col items-end">
                 <div className="text-neon-yellow text-3xl font-semibold leading-none">
-                  {formattedTotalPrice}
+                  {priceLoading ? (
+                    <Skeleton className="h-8 w-[140px] bg-neon-yellow/10" />
+                  ) : (
+                    formattedTotalPrice
+                  )}
                 </div>
                 <div className="text-white/50 text-sm">{recurrence ? `${recurrence}` : ""}</div>
               </div>

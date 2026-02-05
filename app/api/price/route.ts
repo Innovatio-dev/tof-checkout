@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getProductById,
+  getProductVariationById,
+  isWooCommerceConfigured,
+} from "@/lib/woocommerce";
 
 type PriceEntry = { wooId: string; wooVariantId?: string; recurrence: string; platforms: Record<string, number> };
 type PriceTable = Record<string, Record<string, PriceEntry>>;
@@ -47,16 +52,18 @@ const PRICE_TABLE: PriceTable = {
     },
   },
   "instant-sim-funded": {
-    /* "25k": {
+    "25k": {
       wooId: "135",
+      wooVariantId: "137",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 419 },
     },
     "50k": {
       wooId: "135",
+      wooVariantId: "140",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 679 },
-    }, */
+    },
     "100k": {
       wooId: "135",
       wooVariantId: "143",
@@ -71,11 +78,12 @@ const PRICE_TABLE: PriceTable = {
     },
   },
   "s2f-sim-pro": {
-    /* "25k": {
+    "25k": {
       wooId: "135",
+      wooVariantId: "138",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 257 },
-    }, */
+    },
     "50k": {
       wooId: "135",
       wooVariantId: "141",
@@ -119,6 +127,44 @@ const PRICE_TABLE: PriceTable = {
 
 const resolvePrice = (accountType: string, accountSize: string, platform: string) => {
   return PRICE_TABLE[accountType]?.[accountSize]?.platforms?.[platform] ?? null;
+};
+
+const resolveWooIds = (accountType: string, accountSize: string) => {
+  const entry = PRICE_TABLE[accountType]?.[accountSize];
+
+  if (!entry) {
+    return null;
+  }
+
+  return {
+    productId: Number(entry.wooId),
+    variationId: entry.wooVariantId ? Number(entry.wooVariantId) : null,
+  };
+};
+
+const resolveWooPrice = async (accountType: string, accountSize: string) => {
+  if (!isWooCommerceConfigured()) {
+    return null;
+  }
+
+  const ids = resolveWooIds(accountType, accountSize);
+
+  if (!ids || Number.isNaN(ids.productId)) {
+    return null;
+  }
+
+  try {
+    if (ids.variationId && !Number.isNaN(ids.variationId)) {
+      const variation = await getProductVariationById(ids.productId, ids.variationId);
+      return variation.price ? Number(variation.price) : null;
+    }
+
+    const product = await getProductById(ids.productId);
+    return product.price ? Number(product.price) : null;
+  } catch (error) {
+    console.error("Failed to fetch WooCommerce price:", error);
+    return null;
+  }
 };
 
 const resolveRecurrence = (accountType: string, accountSize: string) => {
@@ -182,10 +228,12 @@ export async function POST(request: NextRequest) {
 
   const price = resolvePrice(accountType, accountSize, platform);
   const recurrence = resolveRecurrence(accountType, accountSize);
+  const wooPrice = await resolveWooPrice(accountType, accountSize);
+  const resolvedPrice = wooPrice ?? price;
 
-  if (price === null || recurrence === null) {
+  if (resolvedPrice === null || recurrence === null) {
     return NextResponse.json({ error: "Price not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ price, recurrence });
+  return NextResponse.json({ price: resolvedPrice, recurrence });
 }

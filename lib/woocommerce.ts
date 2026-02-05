@@ -47,6 +47,16 @@ export type WooProduct = {
   stock_status: string;
 };
 
+export type WooProductVariation = {
+  id: number;
+  product_id: number;
+  price: string;
+  regular_price: string;
+  sale_price: string;
+  on_sale: boolean;
+  stock_status: string;
+};
+
 export type WooCoupon = {
   id: number;
   code: string;
@@ -90,6 +100,12 @@ export const getProductById = async (productId: number) => {
   const api = getWooCommerceApi();
   const response = await api.get(`products/${productId}`);
   return response.data as WooProduct;
+};
+
+export const getProductVariationById = async (productId: number, variationId: number) => {
+  const api = getWooCommerceApi();
+  const response = await api.get(`products/${productId}/variations/${variationId}`);
+  return response.data as WooProductVariation;
 };
 
 export const getCouponByCode = async (code: string) => {
