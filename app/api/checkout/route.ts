@@ -4,7 +4,6 @@ import {
   createCustomer,
   createOrder,
   getCustomersByEmail,
-  getProducts,
   type CreateOrderPayload,
 } from "@/lib/woocommerce";
 
@@ -24,6 +23,8 @@ type CheckoutPayload = {
   accountSize?: string;
   platform?: string;
   newsletter?: boolean;
+  wooProductId?: number | null;
+  wooVariantId?: number | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
     "accountType",
     "accountSize",
     "platform",
+    "wooProductId",
   ];
 
   const missingField = requiredFields.find((field) => {
@@ -90,18 +92,17 @@ export async function POST(request: NextRequest) {
       },
     }));
 
-  const products = await getProducts({ per_page: 1 });
-  const product = products[0];
-
-  if (!product) {
-    return NextResponse.json({ error: "No products available." }, { status: 404 });
+  const productId = payload.wooProductId;
+  if (!productId || !Number.isFinite(productId)) {
+    return NextResponse.json({ error: "Invalid product selection." }, { status: 400 });
   }
 
   const orderPayload: CreateOrderPayload = {
     customer_id: customer.id,
     line_items: [
       {
-        product_id: product.id,
+        product_id: productId,
+        variation_id: payload.wooVariantId ?? undefined,
         quantity: payload.quantity ?? 1,
       },
     ],

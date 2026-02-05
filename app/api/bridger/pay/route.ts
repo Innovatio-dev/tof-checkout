@@ -2,6 +2,7 @@ import { StringArray } from "aws-sdk/clients/rdsdataservice"
 import { NextRequest, NextResponse } from "next/server"
 
 import { debugError, debugLog } from "@/lib/debug"
+import { getProductById, getProductVariationById } from "@/lib/woocommerce"
 
 interface AuthResponse {
     token: string
@@ -18,9 +19,7 @@ export interface PayResponse {
 
 interface BodyPayload {
     orderId: string
-    currency: string
     country: string
-    amount: number
     quantity: number
     firstName: string
     lastName: string
@@ -31,6 +30,8 @@ interface BodyPayload {
     city: string
     state?: string
     zipCode: string
+    wooProductId: number
+    wooVariantId?: number
 }
 
 export async function POST(request: NextRequest) {
@@ -44,10 +45,29 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Missing cashier key" }, { status: 500 })
     }
 
-    if (!body.orderId || !body.currency || !body.country || !body.amount || !body.firstName || !body.lastName || !body.phone || !body.email || !body.address || !body.city || !body.zipCode) {
+    if (!body.orderId || !body.country || !body.quantity || !body.firstName || !body.lastName || !body.phone || !body.email || !body.address || !body.city || !body.zipCode || !body.wooProductId) {
         debugLog("[DEBUG::Pay] Missing required payment fields")
         return NextResponse.json({ error: "Missing required fields for payment" }, { status: 400 })
     }
+
+    // Server validations
+    const currency = "USD"
+    const unitPrice = await (async () => {
+        if (body.wooVariantId) {
+            const variation = await getProductVariationById(body.wooProductId, body.wooVariantId)
+            return variation.price ? Number(variation.price) : null
+        }
+
+        const product = await getProductById(body.wooProductId)
+        return product.price ? Number(product.price) : null
+    })()
+
+    if (!unitPrice || !Number.isFinite(unitPrice)) {
+        debugLog("[DEBUG::Pay] Invalid WooCommerce price", { productId: body.wooProductId, variationId: body.wooVariantId })
+        return NextResponse.json({ error: "Invalid product pricing" }, { status: 400 })
+    }
+
+    const totalAmount = unitPrice * body.quantity
 
     try {
         // Authenticate in Bridger Pay to get a token
@@ -74,6 +94,8 @@ export async function POST(request: NextRequest) {
             },
             body: JSON.stringify({
                 ...body,
+                amount: totalAmount,
+                currency,
                 cashierKey,
                 accessToken: authData.token,
             }),

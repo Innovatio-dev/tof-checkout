@@ -36,6 +36,8 @@ export default function HomeContent() {
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState<number | null>(null);
   const [recurrence, setRecurrence] = useState<string | null>(null);
+  const [wooProductId, setWooProductId] = useState<number | null>(null);
+  const [wooVariantId, setWooVariantId] = useState<number | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("credit-card");
   const [accountTypeOptions, setAccountTypeOptions] = useState<{ value: string; label: string }[]>([]);
@@ -294,6 +296,8 @@ export default function HomeContent() {
           accountSize,
           platform,
           newsletter,
+          wooProductId,
+          wooVariantId,
         }),
       })
 
@@ -330,6 +334,8 @@ export default function HomeContent() {
           city,
           state: "",
           zipCode: postcode,
+          wooProductId,
+          wooVariantId,
         }),
       })
 
@@ -370,15 +376,24 @@ export default function HomeContent() {
           throw new Error("Failed to load price");
         }
 
-        const data = (await response.json()) as { price: number; recurrence: string };
+        const data = (await response.json()) as {
+          price: number;
+          recurrence: string;
+          wooProductId?: number | null;
+          wooVariantId?: number | null;
+        };
         if (isMounted) {
           setPrice(data.price);
           setRecurrence(data.recurrence);
+          setWooProductId(data.wooProductId ?? null);
+          setWooVariantId(data.wooVariantId ?? null);
         }
       } catch (error) {
         if (isMounted) {
           setPrice(null);
           setRecurrence(null);
+          setWooProductId(null);
+          setWooVariantId(null);
         }
         console.error(error);
       } finally {
