@@ -168,7 +168,8 @@ export default function HomeContent() {
     }).format(appliedCoupon.discountAmount);
   }, [appliedCoupon?.discountAmount]);
 
-  const handleApplyCoupon = async () => {
+  const handleApplyCoupon = async (event: React.FormEvent) => {
+    event.preventDefault()
     setPromoError(null);
     if (!promoCode.trim()) {
       setPromoError("Enter a promo code.");
@@ -679,7 +680,7 @@ export default function HomeContent() {
               </div>
 
               <div className="col-span-3 flex flex-col gap-2">
-                <div className="flex items-center gap-2 rounded-md border bg-input/50 border-input h-10 px-3">
+                <div className="flex items-center gap-2 rounded-md border bg-input/50 border-input h-12 px-3">
                   {phoneCodeCountry || selectedCountry ? (
                     <SnappFlag code={(phoneCodeCountry ?? selectedCountry)!.code} size="s" className="shrink-0" />
                   ) : (
@@ -691,7 +692,7 @@ export default function HomeContent() {
                     onChange={handlePhoneCodeChange}
                     inputMode="numeric"
                     pattern="\d*"
-                    className="h-11 flex-1 border-0 bg-transparent px-0 focus-visible:ring-0"
+                    className="flex-1 border-0 bg-transparent px-0 focus-visible:ring-0"
                     aria-invalid={Boolean(fieldErrors.phoneCode)}
                   />
                 </div>
@@ -811,16 +812,16 @@ export default function HomeContent() {
               />
             ) : (
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
+                <form className="flex items-center gap-2" onSubmit={handleApplyCoupon}>
                   <Input
                     placeholder="Enter promo code"
                     value={promoCode}
                     onChange={(event) => setPromoCode(event.target.value)}
                   />
-                  <Button variant="primary" size="lg" onClick={handleApplyCoupon} disabled={promoLoading}>
+                  <Button variant="primary" size="lg" type="submit" disabled={promoLoading}>
                     {promoLoading ? "Applying..." : "Apply"}
                   </Button>
-                </div>
+                </form>
                 {promoError && <div className="text-sm text-red-400">{promoError}</div>}
               </div>
             )}
