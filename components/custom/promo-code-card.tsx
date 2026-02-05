@@ -1,3 +1,5 @@
+import { Button } from "../ui/button";
+
 type PromoCodeCardProps = {
   code: string;
   discountLabel: string;
@@ -16,21 +18,21 @@ export default function PromoCodeCard({
       <div className="flex items-center justify-between">
         <div>
           <div className="text-[11px] uppercase tracking-wide text-white/40">Promo code</div>
-          <div className="text-sm font-bold text-neon-yellow tracking-wider uppercase">{code}</div>
+          <div className="flex items-center gap-8 text-sm font-bold text-neon-yellow tracking-wider uppercase">
+            {code}
+          </div>
           {description ? <div className="text-[11px] text-white/70">{description}</div> : null}
         </div>
-        <div className="text-right">
-          <div className="text-sm text-white/60">Discount</div>
-          <div className="text-lg font-bold text-white">-{discountLabel}</div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-sm text-white/60">Discount</div>
+            <div className="text-lg font-bold text-white">-{discountLabel}</div>
+          </div>
+          <Button variant="outline" size="sm" onClick={onRemove}>
+            Remove
+          </Button>
         </div>
       </div>
-      {/* <button
-        type="button"
-        className="text-xs uppercase tracking-wide text-white/60 hover:text-white"
-        onClick={onRemove}
-      >
-        Remove code
-      </button> */}
     </div>
   );
 }
