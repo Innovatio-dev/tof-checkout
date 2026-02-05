@@ -228,6 +228,7 @@ export async function POST(request: NextRequest) {
 
   const price = resolvePrice(accountType, accountSize, platform);
   const recurrence = resolveRecurrence(accountType, accountSize);
+  const wooIds = resolveWooIds(accountType, accountSize);
   const wooPrice = await resolveWooPrice(accountType, accountSize);
   const resolvedPrice = wooPrice ?? price;
 
@@ -235,5 +236,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Price not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ price: resolvedPrice, recurrence });
+  return NextResponse.json({
+    price: resolvedPrice,
+    recurrence,
+    wooProductId: wooIds?.productId ?? null,
+    wooVariantId: wooIds?.variationId ?? null,
+  });
 }

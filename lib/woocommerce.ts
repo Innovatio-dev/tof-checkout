@@ -138,6 +138,7 @@ export const getCustomersByEmail = async (email: string) => {
 
 export type CreateOrderLineItem = {
   product_id: number;
+  variation_id?: number;
   quantity: number;
 };
 
