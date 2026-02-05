@@ -62,38 +62,33 @@ export async function POST(request: NextRequest) {
 
   const email = payload.email!.trim().toLowerCase();
   const existingCustomers = await getCustomersByEmail(email);
-  if (existingCustomers.length > 0) {
-    return NextResponse.json(
-      { error: "A customer with this email already exists. Please log in to continue." },
-      { status: 409 }
-    );
-  }
-
-  const customer = await createCustomer({
-    email,
-    first_name: payload.firstName,
-    last_name: payload.lastName,
-    billing: {
-      first_name: payload.firstName,
-      last_name: payload.lastName,
-      address_1: payload.address1,
-      address_2: payload.address2 ?? "",
-      city: payload.city,
-      postcode: payload.postcode,
-      country: payload.countryCode,
-      phone: `+${payload.phoneCode}${payload.phoneNumber}`,
+  const customer =
+    existingCustomers[0] ??
+    (await createCustomer({
       email,
-    },
-    shipping: {
       first_name: payload.firstName,
       last_name: payload.lastName,
-      address_1: payload.address1,
-      address_2: payload.address2 ?? "",
-      city: payload.city,
-      postcode: payload.postcode,
-      country: payload.countryCode,
-    },
-  });
+      billing: {
+        first_name: payload.firstName,
+        last_name: payload.lastName,
+        address_1: payload.address1,
+        address_2: payload.address2 ?? "",
+        city: payload.city,
+        postcode: payload.postcode,
+        country: payload.countryCode,
+        phone: `+${payload.phoneCode}${payload.phoneNumber}`,
+        email,
+      },
+      shipping: {
+        first_name: payload.firstName,
+        last_name: payload.lastName,
+        address_1: payload.address1,
+        address_2: payload.address2 ?? "",
+        city: payload.city,
+        postcode: payload.postcode,
+        country: payload.countryCode,
+      },
+    }));
 
   const products = await getProducts({ per_page: 1 });
   const product = products[0];
