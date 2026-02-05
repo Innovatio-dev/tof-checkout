@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { debugError, debugLog } from "@/lib/debug"
 import { getProductById, getProductVariationById } from "@/lib/woocommerce"
+import { validateCoupon } from "@/lib/discounts"
 
 interface AuthResponse {
     token: string
@@ -32,6 +33,7 @@ interface BodyPayload {
     zipCode: string
     wooProductId: number
     wooVariantId?: number
+    couponCode?: string | null
 }
 
 export async function POST(request: NextRequest) {
@@ -67,7 +69,25 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Invalid product pricing" }, { status: 400 })
     }
 
-    const totalAmount = unitPrice * body.quantity
+    const sanitizedQuantity = Math.max(1, Number.isFinite(body.quantity) ? body.quantity : 1)
+    const baseTotal = unitPrice * sanitizedQuantity
+    let totalAmount = baseTotal
+
+    if (body.couponCode) {
+        const validation = await validateCoupon({
+            code: body.couponCode,
+            email: body.email,
+            productId: body.wooProductId,
+            total: baseTotal,
+        })
+
+        if (!validation.valid) {
+            debugLog("[DEBUG::Pay] Invalid coupon", { reason: validation.reason })
+            return NextResponse.json({ error: validation.reason || "Invalid coupon" }, { status: 400 })
+        }
+
+        totalAmount = validation.totalAfterDiscount
+    }
 
     try {
         // Authenticate in Bridger Pay to get a token
@@ -95,6 +115,7 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
                 ...body,
                 amount: totalAmount,
+                quantity: sanitizedQuantity,
                 currency,
                 cashierKey,
                 accessToken: authData.token,

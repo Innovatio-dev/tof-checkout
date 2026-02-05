@@ -6,6 +6,8 @@ import {
   getCustomersByEmail,
   type CreateOrderPayload,
 } from "@/lib/woocommerce";
+import { validateCoupon } from "@/lib/discounts";
+import { getProductById, getProductVariationById } from "@/lib/woocommerce";
 
 type CheckoutPayload = {
   email?: string;
@@ -25,6 +27,7 @@ type CheckoutPayload = {
   newsletter?: boolean;
   wooProductId?: number | null;
   wooVariantId?: number | null;
+  couponCode?: string | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -97,13 +100,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid product selection." }, { status: 400 });
   }
 
+  const rawQuantity = payload.quantity ?? 1;
+  const sanitizedQuantity = Math.max(1, Number.isFinite(rawQuantity) ? rawQuantity : 1);
+
+  const unitPrice = await (async () => {
+    if (payload.wooVariantId) {
+      const variation = await getProductVariationById(productId, payload.wooVariantId);
+      return variation.price ? Number(variation.price) : null;
+    }
+    const product = await getProductById(productId);
+    return product.price ? Number(product.price) : null;
+  })();
+
+  if (!unitPrice || !Number.isFinite(unitPrice)) {
+    return NextResponse.json({ error: "Invalid product pricing." }, { status: 400 });
+  }
+
   const orderPayload: CreateOrderPayload = {
     customer_id: customer.id,
     line_items: [
       {
         product_id: productId,
         variation_id: payload.wooVariantId ?? undefined,
-        quantity: payload.quantity ?? 1,
+        quantity: sanitizedQuantity,
       },
     ],
     billing: {
@@ -128,6 +147,20 @@ export async function POST(request: NextRequest) {
     },
     customer_note: `Account type: ${payload.accountType}\nAccount size: ${payload.accountSize}\nPlatform: ${payload.platform}\nNewsletter: ${payload.newsletter ? "yes" : "no"}`,
   };
+
+  const couponCode = payload.couponCode?.trim();
+  if (couponCode) {
+    const validation = await validateCoupon({
+      code: couponCode,
+      email,
+      productId,
+      total: unitPrice * sanitizedQuantity,
+    });
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.reason ?? "Invalid coupon." }, { status: 400 });
+    }
+    orderPayload.coupon_lines = [{ code: couponCode }];
+  }
 
   // TODO: add the Gateway payment integration.
 

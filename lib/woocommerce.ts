@@ -65,6 +65,42 @@ export type WooCoupon = {
   date_expires?: string | null;
 };
 
+export type WooCouponDetail = {
+  id: number;
+  code: string;
+  amount: string;
+  status?: string;
+  date_created?: string;
+  date_created_gmt?: string;
+  date_modified?: string;
+  date_modified_gmt?: string;
+  discount_type?: string;
+  description?: string;
+  date_expires?: string | null;
+  date_expires_gmt?: string | null;
+  usage_count?: number;
+  individual_use?: boolean;
+  product_ids?: number[];
+  excluded_product_ids?: number[];
+  usage_limit?: number | null;
+  usage_limit_per_user?: number | null;
+  limit_usage_to_x_items?: number | null;
+  product_categories?: number[];
+  excluded_product_categories?: number[];
+  exclude_sale_items?: boolean;
+  minimum_amount?: string;
+  maximum_amount?: string;
+  email_restrictions?: string[];
+};
+
+export type WooCouponQuery = {
+  per_page?: number;
+  page?: number;
+  code?: string;
+  status?: string;
+  search?: string;
+};
+
 export type WooCustomer = {
   id: number;
   email: string;
@@ -108,11 +144,78 @@ export const getProductVariationById = async (productId: number, variationId: nu
   return response.data as WooProductVariation;
 };
 
-export const getCouponByCode = async (code: string) => {
+export const getCoupons = async (query?: WooCouponQuery) => {
   const api = getWooCommerceApi();
-  const response = await api.get("coupons", { code });
-  const coupons = response.data as WooCoupon[];
-  return coupons[0] ?? null;
+  const response = await api.get("coupons", query);
+  return response.data as WooCoupon[];
+};
+
+export const getAllCoupons = async ({
+  perPage = 100,
+  maxPages = 200,
+  status,
+  search,
+}: {
+  perPage?: number;
+  maxPages?: number;
+  status?: string;
+  search?: string;
+} = {}) => {
+  const coupons: WooCoupon[] = [];
+  let page = 1;
+
+  while (page <= maxPages) {
+    const batch = await getCoupons({ per_page: perPage, page, status, search });
+    coupons.push(...batch);
+    if (batch.length < perPage) {
+      break;
+    }
+    page += 1;
+  }
+
+  return coupons;
+};
+
+export const getCouponByCode = async (code: string) => {
+  const normalizedCode = code.trim().toLowerCase();
+  if (!normalizedCode) {
+    return null;
+  }
+  const coupons = await getCoupons({ code: normalizedCode });
+  const coupon = coupons.find((item) => item.code?.toLowerCase() === normalizedCode) as
+    | (WooCouponDetail & Record<string, unknown>)
+    | undefined;
+  if (!coupon) {
+    return null;
+  }
+
+  return {
+    id: coupon.id,
+    code: coupon.code,
+    amount: coupon.amount,
+    status: coupon.status,
+    date_created: coupon.date_created,
+    date_created_gmt: coupon.date_created_gmt,
+    date_modified: coupon.date_modified,
+    date_modified_gmt: coupon.date_modified_gmt,
+    discount_type: coupon.discount_type,
+    description: coupon.description,
+    date_expires: coupon.date_expires,
+    date_expires_gmt: coupon.date_expires_gmt,
+    usage_count: coupon.usage_count,
+    individual_use: coupon.individual_use,
+    product_ids: coupon.product_ids,
+    excluded_product_ids: coupon.excluded_product_ids,
+    usage_limit: coupon.usage_limit,
+    usage_limit_per_user: coupon.usage_limit_per_user,
+    limit_usage_to_x_items: coupon.limit_usage_to_x_items,
+    product_categories: coupon.product_categories,
+    excluded_product_categories: coupon.excluded_product_categories,
+    exclude_sale_items: coupon.exclude_sale_items,
+    minimum_amount: coupon.minimum_amount,
+    maximum_amount: coupon.maximum_amount,
+    email_restrictions: coupon.email_restrictions,
+  };
 };
 
 export type CreateCustomerPayload = {

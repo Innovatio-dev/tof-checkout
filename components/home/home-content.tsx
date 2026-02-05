@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import CountryCombobox from "@/components/custom/country-combobox";
 import SnappFlag from "@/components/custom/snapp-flag";
+import PromoCodeCard from "@/components/custom/promo-code-card";
 import { countries } from "@/lib/countries";
 import IpDetectorBlock from "@/components/custom/ip-detector-block";
 import { Spinner } from "@/components/ui/spinner";
@@ -58,6 +59,19 @@ export default function HomeContent() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<
+    | {
+        code: string;
+        description?: string;
+        discountAmount: number;
+        discountType?: string;
+        amount?: string;
+      }
+    | null
+  >(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentData, setPaymentData] = useState<{ cashierKey: string; cashierToken: string } | null>(null);
@@ -137,12 +151,84 @@ export default function HomeContent() {
     if (price === null) {
       return "—";
     }
-    const total = price * quantity;
+    const total = Math.max(0, price * quantity - (appliedCoupon?.discountAmount ?? 0));
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(total);
-  }, [price, quantity]);
+  }, [appliedCoupon?.discountAmount, price, quantity]);
+
+  const formattedDiscount = useMemo(() => {
+    if (!appliedCoupon?.discountAmount) {
+      return "";
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(appliedCoupon.discountAmount);
+  }, [appliedCoupon?.discountAmount]);
+
+  const handleApplyCoupon = async () => {
+    setPromoError(null);
+    if (!promoCode.trim()) {
+      setPromoError("Enter a promo code.");
+      return;
+    }
+    if (!email.trim()) {
+      setPromoError("Enter your email before applying a promo code.");
+      return;
+    }
+    if (!wooProductId || price === null) {
+      setPromoError("Select a product before applying a promo code.");
+      return;
+    }
+
+    setPromoLoading(true);
+    try {
+      const response = await fetch("/api/discount/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          email,
+          productId: wooProductId,
+          total: price * quantity,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        valid?: boolean;
+        reason?: string;
+        discountAmount?: number;
+        totalAfterDiscount?: number;
+        coupon?: { code: string; description?: string; discount_type?: string; amount?: string } | null;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to apply promo code.");
+      }
+
+      if (!data.valid || !data.coupon || !data.discountAmount) {
+        setAppliedCoupon(null);
+        setPromoError(data.reason ?? "Promo code could not be applied.");
+        return;
+      }
+
+      setAppliedCoupon({
+        code: data.coupon.code,
+        description: data.coupon.description,
+        discountType: data.coupon.discount_type,
+        amount: data.coupon.amount,
+        discountAmount: data.discountAmount,
+      });
+    } catch (error) {
+      setAppliedCoupon(null);
+      setPromoError(error instanceof Error ? error.message : "Failed to apply promo code.");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
 
   /* MARK: Payment Iframe */
   const iframeSrcDoc = useMemo(() => {
@@ -298,6 +384,7 @@ export default function HomeContent() {
           newsletter,
           wooProductId,
           wooVariantId,
+          couponCode: appliedCoupon?.code ?? null,
         }),
       })
 
@@ -321,9 +408,7 @@ export default function HomeContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId: String(wooData.orderId),
-          currency: "USD",
           country: countryCode,
-          amount: (price ?? 0),
           quantity,
           firstName,
           lastName,
@@ -336,6 +421,7 @@ export default function HomeContent() {
           zipCode: postcode,
           wooProductId,
           wooVariantId,
+          couponCode: appliedCoupon?.code ?? null,
         }),
       })
 
@@ -408,6 +494,14 @@ export default function HomeContent() {
       isMounted = false;
     };
   }, [accountType, accountSize, platform]);
+
+  useEffect(() => {
+    if (!appliedCoupon) {
+      return;
+    }
+    setAppliedCoupon(null);
+    setPromoError(null);
+  }, [accountType, accountSize, platform, quantity, price, wooProductId, email]);
 
   useEffect(() => {
     let isMounted = true;
@@ -684,23 +778,52 @@ export default function HomeContent() {
             <div className="flex justify-between items-start py-2">
               <div>Total</div>
               <div className="flex flex-col items-end">
-                <div className="text-neon-yellow text-3xl font-semibold leading-none">
-                  {priceLoading ? (
-                    <Skeleton className="h-8 w-[140px] bg-neon-yellow/10" />
-                  ) : (
-                    formattedTotalPrice
-                  )}
+                <div className="flex items-center gap-3">
+                  {appliedCoupon && !priceLoading ? (
+                    <div className="text-lg text-white/30 line-through">
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      }).format((price ?? 0) * quantity)}
+                    </div>
+                  ) : null}
+                  <div className="text-neon-yellow text-3xl font-semibold leading-none">
+                    {priceLoading ? (
+                      <Skeleton className="h-8 w-[140px] bg-neon-yellow/10" />
+                    ) : (
+                      formattedTotalPrice
+                    )}
+                  </div>
                 </div>
                 <div className="text-white/50 text-sm">{recurrence ? `${recurrence}` : ""}</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Input placeholder="Enter promo code" />
-              <Button variant="primary" size="lg">
-                Apply
-              </Button>
-            </div>
+            {appliedCoupon ? (
+              <PromoCodeCard
+                code={appliedCoupon.code}
+                description={appliedCoupon.description}
+                discountLabel={formattedDiscount}
+                onRemove={() => {
+                  setAppliedCoupon(null);
+                  setPromoCode("");
+                }}
+              />
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Enter promo code"
+                    value={promoCode}
+                    onChange={(event) => setPromoCode(event.target.value)}
+                  />
+                  <Button variant="primary" size="lg" onClick={handleApplyCoupon} disabled={promoLoading}>
+                    {promoLoading ? "Applying..." : "Apply"}
+                  </Button>
+                </div>
+                {promoError && <div className="text-sm text-red-400">{promoError}</div>}
+              </div>
+            )}
 
             <Separator className="bg-white/0" />
 
