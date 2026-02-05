@@ -838,12 +838,12 @@ export default function HomeContent() {
                     subtitle="Using card or crypto"
                     availableMethods="visa, amex, mastercard, crypto, tether"
                   />
-                  <PaymentRadioItem
+                  {/* <PaymentRadioItem
                     id="wallet"
                     value="wallet"
                     title="Pay with Google or Apple Pay"
                     availableMethods="apple pay, google pay"
-                  />
+                  /> */}
                 </RadioGroup>
               </div>
 
