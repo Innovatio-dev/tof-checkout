@@ -29,7 +29,11 @@ import { useShallow } from "zustand/react/shallow";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { useLoginModalStore } from "@/components/custom/login-modal";
 
-export default function HomeContent() {
+type HomeContentProps = {
+  isAuthenticated?: boolean
+}
+
+export default function HomeContent({ isAuthenticated = false }: HomeContentProps) {
   const searchParams = useSearchParams();
   const isTesting = searchParams?.get("testing") === "true";
   const openLoginModal = useLoginModalStore((state) => state.openModal)
@@ -561,22 +565,27 @@ export default function HomeContent() {
       </Dialog>
 
       {/* MARK: Init Modal */}
-      <InitModal defaultOpen={!isTesting} isTesting={isTesting} />
+      {!isAuthenticated && <InitModal defaultOpen={!isTesting} isTesting={isTesting} />}
       <div className="flex flex-col md:gap-4 gap-2">
         <h1 className="md:text-6xl text-4xl font-semibold">Checkout</h1>
         <p className="md:text-lg text-base max-w-md leading-tight">
-          Please fill out the information and get funded. Existing customer?{" "}
-          <Link
-            href="#"
-            className="text-neon-yellow font-semibold"
-            onClick={(event) => {
-              event.preventDefault()
-              openLoginModal()
-            }}
-          >
-            Log In
-          </Link>{" "}
-          before you checkout.
+          Please fill out the information and get funded.
+          {!isAuthenticated &&
+            <>
+              Existing customer?{" "}
+              <Link
+                href="#"
+                className="text-neon-yellow font-semibold"
+                onClick={(event) => {
+                  event.preventDefault()
+                  openLoginModal()
+                }}
+                >
+                Log In
+              </Link>{" "}
+              before you checkout.
+            </>
+          }
         </p>
       </div>
 

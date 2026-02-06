@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyEmailOtp } from "@/lib/woocommerce";
+import { createSessionCookie, SESSION_COOKIE_NAME, SESSION_MAX_AGE } from "@/lib/auth";
 
 type VerifyOtpRequestBody = {
   email?: string;
@@ -47,7 +48,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ ok: true, result: response.body });
+    const sessionCookie = await createSessionCookie(normalizedEmail);
+    const apiResponse = NextResponse.json({ ok: true, result: response.body });
+    apiResponse.cookies.set(SESSION_COOKIE_NAME, sessionCookie, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: SESSION_MAX_AGE,
+      path: "/",
+    });
+
+    return apiResponse;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to verify OTP.";
     console.error("[api/otp/verify] error:", error);

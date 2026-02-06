@@ -264,7 +264,7 @@ export default function LoginModal() {
                 className="w-full font-bold"
                 onClick={() => {
                   setOpen(false)
-                  router.push("/")
+                  router.refresh()
                 }}
               >
                 Continue
