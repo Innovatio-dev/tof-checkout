@@ -30,14 +30,40 @@ interface CountryComboboxProps {
 
 const CountryCombobox = ({ onChange, isLocked = false, defaultValue = "", className = "" }: CountryComboboxProps) => {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState(defaultValue)
+  const orderedCountries = React.useMemo(() => {
+    const unitedStatesIndex = countries.findIndex((country) => country.code === "us")
+    if (unitedStatesIndex <= 0) {
+      return countries
+    }
+    const reordered = [...countries]
+    const [unitedStates] = reordered.splice(unitedStatesIndex, 1)
+    reordered.unshift(unitedStates)
+    return reordered
+  }, [])
+  const normalizedDefaultValue = defaultValue.trim().toLowerCase()
+  const resolvedDefaultCode =
+    orderedCountries.find(
+      (country) =>
+        country.code === normalizedDefaultValue ||
+        country.value.toLowerCase() === normalizedDefaultValue ||
+        country.label.toLowerCase() === normalizedDefaultValue
+    )?.code ?? orderedCountries[0]?.code ?? normalizedDefaultValue
+  const [value, setValue] = React.useState(resolvedDefaultCode)
 
   React.useEffect(() => {
-    if (isLocked && defaultValue && value !== defaultValue) {
-      setValue(defaultValue)
-      onChange(defaultValue)
+    if (!resolvedDefaultCode) {
+      return
     }
-  }, [isLocked, defaultValue])
+    if (!value) {
+      setValue(resolvedDefaultCode)
+      onChange(resolvedDefaultCode)
+      return
+    }
+    if (isLocked && value !== resolvedDefaultCode) {
+      setValue(resolvedDefaultCode)
+      onChange(resolvedDefaultCode)
+    }
+  }, [isLocked, onChange, resolvedDefaultCode, value])
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -57,7 +83,7 @@ const CountryCombobox = ({ onChange, isLocked = false, defaultValue = "", classN
             {value ? (
               <span className="flex items-center gap-2">
                 <SnappFlag code={value.toUpperCase()} />
-                {countries.find((country) => country.code === value)?.label}
+                {orderedCountries.find((country) => country.code === value)?.label}
               </span>
             ) : (
               "Select country"
@@ -76,13 +102,13 @@ const CountryCombobox = ({ onChange, isLocked = false, defaultValue = "", classN
               </div>
             </CommandEmpty>
             <CommandGroup>
-              {countries.map((country) => (
+              {orderedCountries.map((country) => (
                 <CommandItem
                   key={country.code}
                   value={country.value}
                   className="text-white/80"
                   onSelect={(currentValue) => {
-                    const selected = countries.find(
+                    const selected = orderedCountries.find(
                       (item) => item.value === currentValue
                     )
                     const selectedCode = selected?.code ?? ""
