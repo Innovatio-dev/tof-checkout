@@ -8,11 +8,11 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "aws",
+      runtime: "nodejs22.x",
     };
   },
   async run() {
     new sst.aws.Nextjs("MyWeb", {
-      runtime: "nodejs22.x",
       environment: {
         WP_SITE_URL: process.env.WP_SITE_URL!,
         WP_CONSUMER_KEY: process.env.WP_CONSUMER_KEY!,
@@ -29,6 +29,7 @@ export default $config({
         SSM_AWS_KEY: process.env.SSM_AWS_KEY!,
         SSM_AWS_PRIVATE_KEY: process.env.SSM_AWS_PRIVATE_KEY!,
         APP_DEBUG: "false",
+        AUTH_SECRET: process.env.AUTH_SECRET!,
       },
     });
   },
