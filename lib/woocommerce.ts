@@ -108,6 +108,18 @@ export type WooCustomer = {
   last_name: string;
 };
 
+export type WooUser = WooCustomer;
+
+export type WooUserQuery = {
+  per_page?: number;
+  page?: number;
+  email?: string;
+  search?: string;
+  role?: string;
+  orderby?: string;
+  order?: "asc" | "desc";
+};
+
 export type WooOrder = {
   id: number;
   status: string;
@@ -237,6 +249,23 @@ export const getCustomersByEmail = async (email: string) => {
   const api = getWooCommerceApi();
   const response = await api.get("customers", { email });
   return response.data as WooCustomer[];
+};
+
+export const getUsers = async (query?: WooUserQuery) => {
+  const api = getWooCommerceApi();
+  const response = await api.get("customers", query);
+  return response.data as WooUser[];
+};
+
+export const getUserByEmail = async (email: string) => {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const users = await getUsers({ email: normalizedEmail });
+  const user = users.find((item) => item.email?.trim().toLowerCase() === normalizedEmail) ?? users[0];
+  return user ?? null;
 };
 
 export type CreateOrderLineItem = {
