@@ -106,6 +106,28 @@ export type WooCustomer = {
   email: string;
   first_name: string;
   last_name: string;
+  billing?: {
+    first_name?: string;
+    last_name?: string;
+    address_1?: string;
+    address_2?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
+    email?: string;
+    phone?: string;
+  };
+  shipping?: {
+    first_name?: string;
+    last_name?: string;
+    address_1?: string;
+    address_2?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
+  };
 };
 
 export type WooUser = WooCustomer;
@@ -136,6 +158,15 @@ export type WooOrder = {
     quantity: number;
     total: string;
   }>;
+};
+
+export type WooOrderQuery = {
+  per_page?: number;
+  page?: number;
+  order?: "asc" | "desc";
+  orderby?: string;
+  customer?: number;
+  status?: string;
 };
 
 export const getProducts = async (query?: Record<string, string | number | boolean | undefined>) => {
@@ -406,4 +437,25 @@ export const getOrderById = async (orderId: number) => {
   const api = getWooCommerceApi();
   const response = await api.get(`orders/${orderId}`);
   return response.data as WooOrder;
+};
+
+export const getOrders = async (query?: WooOrderQuery) => {
+  const api = getWooCommerceApi();
+  const response = await api.get("orders", query);
+  return response.data as WooOrder[];
+};
+
+export const getOrdersByCustomerId = async ({
+  customerId,
+  perPage = 25,
+}: {
+  customerId: number;
+  perPage?: number;
+}) => {
+  return getOrders({
+    customer: customerId,
+    per_page: perPage,
+    orderby: "date",
+    order: "desc",
+  });
 };
