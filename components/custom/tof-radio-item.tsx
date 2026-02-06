@@ -25,7 +25,7 @@ const TofRadioItem = ({ id, value, label, tag }: TofRadioItemProps) => {
       >
         {label}
         {tag && (
-          <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 bg-neon-green text-black px-2 py-[2px] text-[11px] rounded-sm">
+          <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 bg-neon-green text-black px-2 py-[2px] text-[11px] rounded-sm w-fit shrink-0 max-w-none">
             {tag}
           </span>
         )}

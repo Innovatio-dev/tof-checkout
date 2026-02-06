@@ -93,7 +93,7 @@ const CountryCombobox = ({ onChange, isLocked = false, defaultValue = "", classN
         </PopoverTrigger>
       <PopoverContent className="w-(--radix-popover-trigger-width) p-0 z-300 border-gray-800 rounded-lg" onOpenAutoFocus={e => e.preventDefault()}>
         <Command className="w-full bg-dark text-white">
-          <CommandInput autoFocus placeholder="Search country..." className="h-10 text-[16px]" />
+          <CommandInput placeholder="Search country..." className="h-10 text-[16px]" />
           <CommandList>
             <CommandEmpty>
               <div className="text-gray-400 flex items-center justify-center gap-2 p-4">
