@@ -10,10 +10,10 @@ const Header = () => {
           <Image src="/images/tof-logo.png" alt="Logo" width={669} height={192} className="w-40" />
         </Link>
         <div className="flex gap-2">
+          <Button variant="outline" size="lg">Log In</Button>
           <Link href="https://portal.toponefutures.com" target="_blank" rel="noreferrer">
-            <Button variant="outline" size="lg">Log In</Button>
+            <Button variant="primary" size="lg">Start Trading NOW</Button>
           </Link>
-          {/* <Button variant="primary" size="lg" className="hidden md:block">Start Trading NOW</Button> */}
         </div>
       </div>
     </header>
