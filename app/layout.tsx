@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import Image from "next/image";
-import Header from "@/components/custom/header";
+import HeaderWrapper from "@/components/custom/header-wrapper";
 import Footer from "@/components/custom/footer";
+import LoginModal from "@/components/custom/login-modal";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -39,7 +40,8 @@ export default function RootLayout({
         </div>
         <div className="absolute w-1/2 aspect-square top-0 left-1/2 transform -translate-x-1/3 -translate-y-1/2 bg-neon-green/5 rounded-full blur-3xl"></div>
         <main className="relative">
-          <Header />
+          <HeaderWrapper />
+          <LoginModal />
           <main className="p-6">
             <div className="w-full max-w-6xl mx-auto">
               {children}

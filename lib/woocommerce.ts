@@ -108,6 +108,18 @@ export type WooCustomer = {
   last_name: string;
 };
 
+export type WooUser = WooCustomer;
+
+export type WooUserQuery = {
+  per_page?: number;
+  page?: number;
+  email?: string;
+  search?: string;
+  role?: string;
+  orderby?: string;
+  order?: "asc" | "desc";
+};
+
 export type WooOrder = {
   id: number;
   status: string;
@@ -237,6 +249,132 @@ export const getCustomersByEmail = async (email: string) => {
   const api = getWooCommerceApi();
   const response = await api.get("customers", { email });
   return response.data as WooCustomer[];
+};
+
+export const getUsers = async (query?: WooUserQuery) => {
+  const api = getWooCommerceApi();
+  const response = await api.get("customers", query);
+  return response.data as WooUser[];
+};
+
+export const getUserByEmail = async (email: string) => {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const users = await getUsers({ email: normalizedEmail });
+  const user = users.find((item) => item.email?.trim().toLowerCase() === normalizedEmail) ?? users[0];
+  return user ?? null;
+};
+
+export const requestEmailOtp = async (email: string) => {
+  if (!siteUrl) {
+    throw new Error("WP_SITE_URL is not set");
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error("Email is required");
+  }
+
+  const response = await fetch(`${siteUrl}/wp-json/email-otp/v1/request`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email: normalizedEmail }),
+  });
+
+  const rawBody = await response.text().catch(() => "");
+  const parsedBody = ((): unknown => {
+    if (!rawBody) {
+      return null;
+    }
+    try {
+      return JSON.parse(rawBody);
+    } catch {
+      return rawBody;
+    }
+  })();
+
+  if (!response.ok) {
+    console.error("[wp/email-otp/request] non-ok response", {
+      status: response.status,
+      statusText: response.statusText,
+      body: parsedBody,
+    });
+    const body = parsedBody as { error?: string; message?: string } | null;
+    throw new Error(body?.error ?? body?.message ?? "Failed to request OTP");
+  }
+
+  console.log("[wp/email-otp/request] ok response", {
+    status: response.status,
+    body: parsedBody,
+  });
+  return (parsedBody ?? {}) as Record<string, unknown>;
+};
+
+export const verifyEmailOtp = async ({ email, otp }: { email: string; otp: string | number }) => {
+  if (!siteUrl) {
+    throw new Error("WP_SITE_URL is not set");
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error("Email is required");
+  }
+
+  const otpString = String(otp).trim();
+  if (!/^\d{6}$/.test(otpString)) {
+    throw new Error("OTP must be 6 digits");
+  }
+
+  const response = await fetch(`${siteUrl}/wp-json/email-otp/v1/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: normalizedEmail,
+      otp: Number(otpString),
+    }),
+  });
+
+  const rawBody = await response.text().catch(() => "");
+  const parsedBody = ((): unknown => {
+    if (!rawBody) {
+      return null;
+    }
+    try {
+      return JSON.parse(rawBody);
+    } catch {
+      return rawBody;
+    }
+  })();
+
+  if (!response.ok) {
+    console.error("[wp/email-otp/verify] non-ok response", {
+      status: response.status,
+      statusText: response.statusText,
+      body: parsedBody,
+    });
+    return {
+      ok: false,
+      status: response.status,
+      body: parsedBody,
+    };
+  }
+
+  console.log("[wp/email-otp/verify] ok response", {
+    status: response.status,
+    body: parsedBody,
+  });
+  return {
+    ok: true,
+    status: response.status,
+    body: (parsedBody ?? {}) as Record<string, unknown>,
+  };
 };
 
 export type CreateOrderLineItem = {
