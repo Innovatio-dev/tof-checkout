@@ -81,18 +81,21 @@ export default function InitModal({
       open={open}
       onOpenChange={setOpen}
       backHref="https://toponefutures.com"
-      modalDescription="Enter your information to receive instructions after checkout."
+      modalDescription="Let's get your trading account set up"
     >
       <div className="flex flex-col items-center gap-4">
         <Image src="/images/tof-logo-dark.png" alt="Top One Futures" width={335} height={96} className="w-auto h-[50px]" />
-        <h2 className="text-2xl font-bold text-gray-900 md:text-3xl leading-none mt-4">
-          Enter your information to receive instructions after checkout.
+        <h2 className="text-2xl font-bold text-gray-900 md:text-3xl leading-none mt-4 max-w-[360px]">
+          Let&apos;s get your trading account set up
         </h2>
-        <Link href="#" className="text-sm font-medium text-gray-700 underline underline-offset-4">
+        <h4 className="text-base font-medium text-gray-900 max-w-[360px]">
+          Enter your information below
+        </h4>
+        {/* <Link href="#" className="text-sm font-medium text-gray-700 underline underline-offset-4">
           Have an account? Log In
-        </Link>
+        </Link> */}
       </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-[360px] mx-auto">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-[400px] px-2 mx-auto">
         <Input
           placeholder="Enter your full name"
           value={name}
@@ -124,10 +127,10 @@ export default function InitModal({
             </span>
           )}
         </Button>
-        <p className="text-xs text-gray-500">
-          Agree to our <span className="underline underline-offset-4">Privacy Policy</span> and{" "}
-          <span className="underline underline-offset-4">Terms and Conditions</span> *
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-gray-500">🔒 Secure checkout · Trusted By 13,000+ Funded Traders</p>
+          <p className="text-xs text-gray-500">⭐⭐⭐⭐⭐ 3,000+ 5-Star Reviews on Trustpilot</p>
+        </div>
         {message ? <p className="text-sm text-gray-600">{message}</p> : null}
       </form>
     </Modal>
