@@ -541,7 +541,7 @@ export default function HomeContent() {
   }, [accountType, accountSize, platform]);
 
   return (
-    <div className="flex flex-col gap-16 font-sans text-white">
+    <div className="flex flex-col gap-10 font-sans text-white">
       {/* MARK: Payment Modal */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
         <DialogContent className="max-w-[960px] w-[96vw] p-1 bg-[#363636] rounded-2xl" showCloseButton={false}>
@@ -573,21 +573,21 @@ export default function HomeContent() {
 
       <div className="flex flex-col md:flex-row xl:gap-16 md:gap-8 gap-4">
         {/* MARK: Account Information */}
-        <div className="flex flex-col gap-16 w-full md:w-1/2">
+        <div className="flex flex-col gap-10 w-full md:w-1/2">
           {/* Fist Column */}
           {/* #1 Confirm account information */}
           <div className="flex flex-col gap-4">
             <InstructionItem number={1} caption="Confirm trading account information" />
             <FormSection title="Account type">
-              <RadioGroup value={accountType} onValueChange={setAccountType} className="grid grid-cols-2 gap-3">
+              <RadioGroup value={accountType} onValueChange={setAccountType} className="grid grid-cols-2 gap-2">
                 {accountTypeOptions.map((option) => (
-                  <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
+                  <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} tag={option.value === "s2f-sim-pro" ? "Highest Payouts" : option.value === "ignite-instant" ? "Most Popular" : ""} />
                 ))}
               </RadioGroup>
             </FormSection>
 
             <FormSection title="Account size">
-              <RadioGroup value={accountSize} onValueChange={setAccountSize} className="grid grid-cols-2 gap-3">
+              <RadioGroup value={accountSize} onValueChange={setAccountSize} className="grid grid-cols-2 gap-2">
                 {accountSizeOptions.map((option) => (
                   <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
                 ))}
@@ -595,7 +595,7 @@ export default function HomeContent() {
             </FormSection>
 
             <FormSection title="Platform">
-              <RadioGroup value={platform} onValueChange={setPlatform} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <RadioGroup value={platform} onValueChange={setPlatform} className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {platformOptions.map((option) => (
                   <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
                 ))}
@@ -621,7 +621,7 @@ export default function HomeContent() {
           {/* #3 Billing details */}
           <div className="flex flex-col gap-4">
             <InstructionItem number={3} caption="Billing details" />
-            <div className="grid grid-cols-10 gap-4">
+            <div className="grid grid-cols-10 gap-3">
               <div className="col-span-6 flex flex-col gap-2">
                 <Input
                   placeholder="First name"
@@ -642,7 +642,7 @@ export default function HomeContent() {
               </div>
 
               <div className="col-span-10 flex flex-col gap-2">
-                <CountryCombobox onChange={handleCountryChange} />
+                <CountryCombobox onChange={handleCountryChange} defaultValue="USA" />
                 {fieldErrors.countryCode && <span className="text-sm text-red-400">{fieldErrors.countryCode}</span>}
               </div>
               <div className="col-span-10 flex flex-col gap-2">
@@ -701,6 +701,7 @@ export default function HomeContent() {
               <div className="col-span-7 flex flex-col gap-2">
                 <Input
                   placeholder="Phone number"
+                  type="tel"
                   value={phoneNumber}
                   onChange={(event) => setPhoneNumber(event.target.value)}
                   aria-invalid={Boolean(fieldErrors.phoneNumber)}
@@ -722,7 +723,7 @@ export default function HomeContent() {
         </div>
 
         {/* MARK: Order Summary */}
-        <div className="flex flex-col gap-8 w-full md:w-1/2 lg:min-w-lg md:min-w-md md:shrink-0">
+        <div className="flex flex-col gap-4 w-full md:w-1/2 lg:min-w-lg md:min-w-md md:shrink-0">
           {/* Second Column */}
           <div className="flex flex-col gap-4 bg-white/8 border border-white/10 rounded-2xl p-6">
             <h4 className="text-xl font-semibold">Top One Futures Account</h4>
