@@ -27,10 +27,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useUserStore } from "@/lib/user-store";
 import { useShallow } from "zustand/react/shallow";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { useLoginModalStore } from "@/components/custom/login-modal";
 
 export default function HomeContent() {
   const searchParams = useSearchParams();
   const isTesting = searchParams?.get("testing") === "true";
+  const openLoginModal = useLoginModalStore((state) => state.openModal)
   const [accountType, setAccountType] = useState("instant-sim-funded");
   const [accountSize, setAccountSize] = useState("50k");
   const [platform, setPlatform] = useState("tradovate-ninjatrader");
@@ -564,7 +566,14 @@ export default function HomeContent() {
         <h1 className="md:text-6xl text-4xl font-semibold">Checkout</h1>
         <p className="md:text-lg text-base max-w-md leading-tight">
           Please fill out the information and get funded. Existing customer?{" "}
-          <Link href="#" className="text-neon-yellow font-semibold">
+          <Link
+            href="#"
+            className="text-neon-yellow font-semibold"
+            onClick={(event) => {
+              event.preventDefault()
+              openLoginModal()
+            }}
+          >
             Log In
           </Link>{" "}
           before you checkout.
