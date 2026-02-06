@@ -853,7 +853,19 @@ export default function HomeContent() {
                 <TofCheckbox
                   id="terms"
                   name="terms"
-                  label="Agree to our Privacy Policy and Terms and Conditions*"
+                  label={
+                    <span>
+                      Agree to our{" "}
+                      <Link href="//toponefutures.com/privacy-policy" target="_blank" className="font-semibold text-neon-green hover:text-neon-yellow">
+                        Privacy Policy
+                      </Link>
+                      {" "}and{" "}
+                      <Link href="//toponefutures.com/terms-and-conditions" target="_blank" className="font-semibold text-neon-green hover:text-neon-yellow">
+                        Terms and Conditions
+                      </Link>
+                      *
+                    </span>
+                  }
                   checked={termsAccepted}
                   onCheckedChange={setTermsAccepted}
                 />

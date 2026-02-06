@@ -1,9 +1,11 @@
+import type { ReactNode } from "react"
+
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Checkbox } from "@/components/ui/checkbox"
 
 interface TofCheckboxProps {
   id: string
-  label: string
+  label: ReactNode
   name: string
   checked?: boolean
   onCheckedChange?: (checked: boolean) => void
