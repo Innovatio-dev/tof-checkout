@@ -25,10 +25,11 @@ interface CountryComboboxProps {
     onChange: (value: string) => void
     isLocked?: boolean
     defaultValue?: string
+    controlledValue?: string
     className?: string
 }
 
-const CountryCombobox = ({ onChange, isLocked = false, defaultValue = "", className = "" }: CountryComboboxProps) => {
+const CountryCombobox = ({ onChange, isLocked = false, defaultValue = "", controlledValue, className = "" }: CountryComboboxProps) => {
   const [open, setOpen] = React.useState(false)
   const orderedCountries = React.useMemo(() => {
     const unitedStatesIndex = countries.findIndex((country) => country.code === "us")
@@ -48,7 +49,35 @@ const CountryCombobox = ({ onChange, isLocked = false, defaultValue = "", classN
         country.value.toLowerCase() === normalizedDefaultValue ||
         country.label.toLowerCase() === normalizedDefaultValue
     )?.code ?? orderedCountries[0]?.code ?? normalizedDefaultValue
+  const normalizedValue = controlledValue?.trim().toLowerCase() ?? ""
+  const resolvedControlledCode =
+    orderedCountries.find(
+      (country) =>
+        country.code === normalizedValue ||
+        country.value.toLowerCase() === normalizedValue ||
+        country.label.toLowerCase() === normalizedValue
+    )?.code ?? normalizedValue
   const [value, setValue] = React.useState(resolvedDefaultCode)
+
+  React.useEffect(() => {
+    if (controlledValue === undefined) {
+      return
+    }
+    if (resolvedControlledCode) {
+      setValue(resolvedControlledCode)
+    }
+  }, [controlledValue, resolvedControlledCode])
+
+  React.useEffect(() => {
+    if (controlledValue !== undefined) {
+      return
+    }
+    if (!resolvedDefaultCode) {
+      return
+    }
+    setValue((current) => current || resolvedDefaultCode)
+    onChange(resolvedDefaultCode)
+  }, [controlledValue, onChange, resolvedDefaultCode])
 
   React.useEffect(() => {
     if (!resolvedDefaultCode) {

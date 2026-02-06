@@ -125,6 +125,105 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   }, [email, firstName, lastName, storedEmail, storedFirstName, storedLastName])
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    let isMounted = true
+    const loadProfile = async () => {
+      try {
+        const response = await fetch("/api/users/me")
+        if (!response.ok) {
+          throw new Error("Failed to load profile")
+        }
+        const data = (await response.json()) as {
+          user?: {
+            email?: string
+            first_name?: string
+            last_name?: string
+            billing?: {
+              first_name?: string
+              last_name?: string
+              address_1?: string
+              address_2?: string
+              city?: string
+              postcode?: string
+              country?: string
+              phone?: string
+              email?: string
+            }
+          } | null
+        }
+        if (!isMounted || !data.user) {
+          return
+        }
+
+        const billing = data.user.billing ?? {}
+        const resolveName = (billingValue?: string, userValue?: string) => billingValue || userValue || ""
+        const normalizedCountry = billing.country?.trim().toLowerCase() ?? ""
+        const phoneValue = billing.phone?.trim() ?? ""
+        const phoneMatch = phoneValue.match(/^\+?(\d{1,4})(\d+)$/)
+        const resolvedPhoneCode = phoneMatch?.[1] ?? ""
+        const resolvedPhoneNumber = phoneMatch?.[2] ?? ""
+
+        if (!email && (billing.email || data.user.email)) {
+          setEmail(billing.email ?? data.user.email ?? "")
+        }
+        if (!firstName && resolveName(billing.first_name, data.user.first_name)) {
+          setFirstName(resolveName(billing.first_name, data.user.first_name))
+        }
+        if (!lastName && resolveName(billing.last_name, data.user.last_name)) {
+          setLastName(resolveName(billing.last_name, data.user.last_name))
+        }
+        if (!address1 && billing.address_1) {
+          setAddress1(billing.address_1)
+        }
+        if (!address2 && billing.address_2) {
+          setAddress2(billing.address_2)
+        }
+        if (!city && billing.city) {
+          setCity(billing.city)
+        }
+        if (!postcode && billing.postcode) {
+          setPostcode(billing.postcode)
+        }
+        if (!countryCode && normalizedCountry) {
+          setCountryCode(normalizedCountry)
+        }
+        if (!phoneCode && resolvedPhoneCode) {
+          setPhoneCode(resolvedPhoneCode)
+        }
+        if (!phoneNumber && resolvedPhoneNumber) {
+          setPhoneNumber(resolvedPhoneNumber)
+        }
+      } catch (error) {
+        console.error(error)
+      } finally {
+        if (!isMounted) {
+          return
+        }
+      }
+    }
+
+    loadProfile()
+    return () => {
+      isMounted = false
+    }
+  }, [
+    address1,
+    address2,
+    city,
+    countryCode,
+    email,
+    firstName,
+    isAuthenticated,
+    lastName,
+    phoneCode,
+    phoneNumber,
+    postcode,
+  ])
+
+  useEffect(() => {
     if (!paymentModalOpen) {
       return
     }
@@ -660,7 +759,11 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
               </div>
 
               <div className="col-span-10 flex flex-col gap-2">
-                <CountryCombobox onChange={handleCountryChange} defaultValue="USA" />
+                <CountryCombobox
+                  onChange={handleCountryChange}
+                  defaultValue="US"
+                  controlledValue={countryCode}
+                />
                 {fieldErrors.countryCode && <span className="text-sm text-red-400">{fieldErrors.countryCode}</span>}
               </div>
               <div className="col-span-10 flex flex-col gap-2">
