@@ -15,7 +15,7 @@ const TofRadioItem = ({ id, value, label, tag }: TofRadioItemProps) => {
       <label
         htmlFor={id}
         className={cn(
-          "relative flex h-14 items-center justify-center leading-tight! text-center rounded-md border cursor-pointer",
+          "relative flex md:h-14 h-15 items-center justify-center leading-tight! text-center rounded-md border cursor-pointer",
           "border-white/10 bg-white/10 px-4 text-sm font-semibold text-white/70",
           "transition-colors hover:border-white/40 hover:bg-white/15",
           "peer-data-[state=checked]:border-white",
@@ -25,7 +25,7 @@ const TofRadioItem = ({ id, value, label, tag }: TofRadioItemProps) => {
       >
         {label}
         {tag && (
-          <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 bg-neon-green text-black px-2 py-[2px] text-[11px] rounded-sm w-fit shrink-0 max-w-none">
+          <span className="absolute top-0 left-1/2 transform -translate-x-1/2 md:-translate-y-1/4 -translate-y-1/2 bg-neon-green text-black px-2 py-[2px] md:text-[11px] text-[9px] rounded-sm w-fit shrink-0 max-w-none whitespace-nowrap">
             {tag}
           </span>
         )}
