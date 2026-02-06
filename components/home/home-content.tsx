@@ -560,9 +560,9 @@ export default function HomeContent() {
 
       {/* MARK: Init Modal */}
       <InitModal defaultOpen={!isTesting} isTesting={isTesting} />
-      <div>
-        <h1 className="text-6xl font-semibold">Checkout</h1>
-        <p className="text-lg max-w-md">
+      <div className="flex flex-col md:gap-4 gap-2">
+        <h1 className="md:text-6xl text-4xl font-semibold">Checkout</h1>
+        <p className="md:text-lg text-base max-w-md leading-tight">
           Please fill out the information and get funded. Existing customer?{" "}
           <Link href="#" className="text-neon-yellow font-semibold">
             Log In
@@ -829,7 +829,7 @@ export default function HomeContent() {
 
             <Separator className="bg-white/0" />
 
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-8">
               <div className="flex flex-col gap-6">
                 <h4 className="text-xl font-semibold">Choose payment method</h4>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="flex flex-col gap-4">

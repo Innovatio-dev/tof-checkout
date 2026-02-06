@@ -35,7 +35,7 @@ const MethodTile = ({ method }: { method: string }) => {
 
   if (logo) {
     return (
-      <Image src={logo.src} alt={method.trim()} width={logo.w} height={logo.h} className="lg:h-7 md:h-5 h-7 w-auto" />
+      <Image src={logo.src} alt={method.trim()} width={logo.w} height={logo.h} className="lg:h-7 md:h-5 h-5 w-auto" />
     );
   }
 };
@@ -52,7 +52,7 @@ const PaymentRadioItem = ({ id, value, title, subtitle, availableMethods }: Paym
       <label
         htmlFor={id}
         className={cn(
-          "flex flex-col md:flex-row md:items-center md:justify-between md:gap-6 gap-4 rounded-2xl border md:px-5 px-4 py-1 cursor-pointer min-h-26",
+          "flex flex-col md:flex-row md:items-center md:justify-between md:gap-6 gap-4 rounded-2xl border md:px-5 px-4 md:py-1 py-3 cursor-pointer min-h-26",
           "border-white/10 bg-white/8",
           "transition-colors",
           "hover:border-white/30",
@@ -81,7 +81,7 @@ const PaymentRadioItem = ({ id, value, title, subtitle, availableMethods }: Paym
           </div>
         </div>
 
-        <div className="flex flex-wrap lg:flex-nowrap items-center gap-2">
+        <div className="flex flex-wrap lg:flex-nowrap items-center justify-center md:justify-end gap-2">
           {methods.map((m) => (
             <MethodTile key={m} method={m} />
           ))}
