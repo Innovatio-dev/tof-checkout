@@ -38,37 +38,62 @@ export default function ManageSubscription() {
         </p>
       </header>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
-        <div className="grid grid-cols-[minmax(110px,1fr)_2fr_1.1fr_0.9fr_0.9fr_0.7fr] gap-4 bg-white/5 px-6 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
-          <span>ID</span>
-          <span>Challenge Name</span>
-          <span>Next payment</span>
-          <span>Amount</span>
-          <span>Status</span>
-          <span>Action</span>
-        </div>
-        <div className="divide-y divide-white/5">
-          {subscriptionRows.map((row) => (
-            <div
-              key={row.id}
-              className="grid grid-cols-[minmax(110px,1fr)_2fr_1.1fr_0.9fr_0.9fr_0.7fr] gap-4 px-6 py-5 text-sm text-white/80"
-            >
+      <div className="mt-6 flex flex-col gap-4 md:hidden">
+        {subscriptionRows.map((row) => (
+          <div key={row.id} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/80">
+            <div className="flex items-center justify-between">
               <span className="font-semibold text-emerald-300">{row.id}</span>
-              <span className="font-semibold text-white">{row.name}</span>
-              <span className="text-white/70">{row.nextPayment}</span>
-              <span className="font-semibold text-white">{row.amount}</span>
-              <span className="font-semibold text-amber-300">{row.status}</span>
-              <span>
-                <button
-                  type="button"
-                  onClick={() => setShowDetail(true)}
-                  className="rounded-full bg-[#6dd46a] px-4 py-2 text-xs font-semibold text-[#0c120c]"
-                >
-                  View
-                </button>
-              </span>
+              <span className="text-xs font-semibold uppercase text-amber-300">{row.status}</span>
             </div>
-          ))}
+            <p className="mt-2 text-base font-semibold text-white">{row.name}</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/60">
+              <span>Next payment: {row.nextPayment}</span>
+              <span className="text-sm font-semibold text-white">{row.amount}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDetail(true)}
+              className="mt-4 w-full rounded-full bg-[#6dd46a] px-4 py-2 text-xs font-semibold text-[#0c120c]"
+            >
+              View
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 hidden w-full overflow-x-auto md:block">
+        <div className="inline-block min-w-[720px] rounded-2xl border border-white/10">
+          <div className="grid grid-cols-[minmax(110px,1fr)_2fr_1.1fr_0.9fr_0.9fr_0.7fr] gap-4 bg-white/5 px-6 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+            <span>ID</span>
+            <span>Challenge Name</span>
+            <span>Next payment</span>
+            <span>Amount</span>
+            <span>Status</span>
+            <span>Action</span>
+          </div>
+          <div className="divide-y divide-white/5">
+            {subscriptionRows.map((row) => (
+              <div
+                key={row.id}
+                className="grid grid-cols-[minmax(110px,1fr)_2fr_1.1fr_0.9fr_0.9fr_0.7fr] gap-4 px-6 py-5 text-sm text-white/80"
+              >
+                <span className="font-semibold text-emerald-300">{row.id}</span>
+                <span className="font-semibold text-white">{row.name}</span>
+                <span className="text-white/70">{row.nextPayment}</span>
+                <span className="font-semibold text-white">{row.amount}</span>
+                <span className="font-semibold text-amber-300">{row.status}</span>
+                <span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDetail(true)}
+                    className="rounded-full bg-[#6dd46a] px-4 py-2 text-xs font-semibold text-[#0c120c]"
+                  >
+                    View
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

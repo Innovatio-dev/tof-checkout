@@ -41,7 +41,7 @@ const getOrderSummary = (order: WooOrder) => {
 
 export default function OrderHistory({ orders, isAuthenticated }: OrderHistoryProps) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-[#0c0e0c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+    <section className="overflow-x-hidden w-full rounded-3xl border border-white/10 bg-[#0c0e0c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <h2 className="text-xl font-semibold">Orders History</h2>
@@ -58,37 +58,65 @@ export default function OrderHistory({ orders, isAuthenticated }: OrderHistoryPr
         )}
       </header>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
-        <div className="grid grid-cols-[minmax(110px,1fr)_2.2fr_1.3fr_1fr_1.1fr] gap-4 bg-white/5 px-6 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
-          <span>ID</span>
-          <span>Challenge Name</span>
-          <span>Date</span>
-          <span>Amount</span>
-          <span>Status</span>
-        </div>
-        <div className="divide-y divide-white/5">
-          {orders.length === 0 ? (
-            <div className="px-6 py-10 text-center text-sm text-white/60">
-              {isAuthenticated ? "No orders found yet." : "Sign in to view your order history."}
-            </div>
-          ) : (
-            orders.map((order) => (
-              <div
-                key={order.id}
-                className="grid grid-cols-[minmax(110px,1fr)_2.2fr_1.3fr_1fr_1.1fr] gap-4 px-6 py-5 text-sm text-white/80"
-              >
+      <div className="mt-6 flex flex-col gap-4 md:hidden">
+        {orders.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-6 text-center text-sm text-white/60">
+            {isAuthenticated ? "No orders found yet." : "Sign in to view your order history."}
+          </div>
+        ) : (
+          orders.map((order) => (
+            <div key={order.id} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/80">
+              <div className="flex items-center justify-between">
                 <span className="font-semibold text-emerald-300">#{order.id}</span>
-                <span className="font-semibold text-white">{getOrderSummary(order)}</span>
-                <span className="text-white/70">{formatOrderDate(order.date_created)}</span>
-                <span className="font-semibold text-white">
-                  {order.currency} {Number(order.total).toFixed(2)}
-                </span>
-                <span className={`font-semibold ${statusStyles[order.status] ?? "text-white/70"}`}>
+                <span className={`text-xs font-semibold uppercase ${statusStyles[order.status] ?? "text-white/70"}`}>
                   {formatStatus(order.status)}
                 </span>
               </div>
-            ))
-          )}
+              <p className="mt-2 text-base font-semibold text-white">{getOrderSummary(order)}</p>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/60">
+                <span>{formatOrderDate(order.date_created)}</span>
+                <span className="text-sm font-semibold text-white">
+                  {order.currency} {Number(order.total).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-6 hidden w-full overflow-x-auto md:block">
+        <div className="inline-block min-w-[640px] max-w-none rounded-2xl border border-white/10">
+          <div className="grid grid-cols-[minmax(110px,1fr)_2.2fr_1.3fr_1fr_1.1fr] gap-4 rounded-t-2xl bg-white/5 px-6 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+            <span>ID</span>
+            <span>Challenge Name</span>
+            <span>Date</span>
+            <span>Amount</span>
+            <span>Status</span>
+          </div>
+          <div className="divide-y divide-white/5">
+            {orders.length === 0 ? (
+              <div className="px-6 py-10 text-center text-sm text-white/60">
+                {isAuthenticated ? "No orders found yet." : "Sign in to view your order history."}
+              </div>
+            ) : (
+              orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="grid grid-cols-[minmax(110px,1fr)_2.2fr_1.3fr_1fr_1.1fr] gap-4 px-6 py-5 text-sm text-white/80"
+                >
+                  <span className="font-semibold text-emerald-300">#{order.id}</span>
+                  <span className="font-semibold text-white">{getOrderSummary(order)}</span>
+                  <span className="text-white/70">{formatOrderDate(order.date_created)}</span>
+                  <span className="font-semibold text-white">
+                    {order.currency} {Number(order.total).toFixed(2)}
+                  </span>
+                  <span className={`font-semibold ${statusStyles[order.status] ?? "text-white/70"}`}>
+                    {formatStatus(order.status)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </section>

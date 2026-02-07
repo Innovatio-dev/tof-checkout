@@ -168,7 +168,7 @@ export default function LoginModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="w-[96vw] max-w-[380px]! rounded-2xl border border-white/10 bg-dark p-6 text-white shadow-2xl"
+        className="w-[96vw] max-w-[380px]! max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-white/10 bg-dark p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white shadow-2xl"
         showCloseButton
       >
         <DialogHeader className="text-center">

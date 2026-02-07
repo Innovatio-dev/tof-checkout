@@ -18,7 +18,7 @@ export default async function AccountPage() {
   })();
 
   return (
-    <div className="min-h-screen px-6 py-12 text-white">
+    <div className="min-h-screen md:px-6 px-0 md:py-12 py-8 text-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/50">Account</p>
