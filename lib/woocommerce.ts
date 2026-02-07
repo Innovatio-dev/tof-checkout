@@ -160,7 +160,34 @@ export type WooOrder = {
   }>;
 };
 
+export type WooSubscription = {
+  id: number;
+  status: string;
+  total: string;
+  currency: string;
+  date_created?: string;
+  next_payment_date?: string;
+  billing?: {
+    email?: string;
+  };
+  line_items?: Array<{
+    id: number;
+    name: string;
+    quantity: number;
+    total: string;
+  }>;
+};
+
 export type WooOrderQuery = {
+  per_page?: number;
+  page?: number;
+  order?: "asc" | "desc";
+  orderby?: string;
+  customer?: number;
+  status?: string;
+};
+
+export type WooSubscriptionQuery = {
   per_page?: number;
   page?: number;
   order?: "asc" | "desc";
@@ -445,6 +472,12 @@ export const getOrders = async (query?: WooOrderQuery) => {
   return response.data as WooOrder[];
 };
 
+export const getSubscriptions = async (query?: WooSubscriptionQuery) => {
+  const api = getWooCommerceApi();
+  const response = await api.get("subscriptions", query);
+  return response.data as WooSubscription[];
+};
+
 export const getOrdersByCustomerId = async ({
   customerId,
   perPage = 25,
@@ -454,6 +487,26 @@ export const getOrdersByCustomerId = async ({
 }) => {
   return getOrders({
     customer: customerId,
+    per_page: perPage,
+    orderby: "date",
+    order: "desc",
+  });
+};
+
+export const getSubscriptionsByEmail = async ({
+  email,
+  perPage = 25,
+}: {
+  email: string;
+  perPage?: number;
+}) => {
+  const user = await getUserByEmail(email);
+  if (!user) {
+    return [] as WooSubscription[];
+  }
+
+  return getSubscriptions({
+    customer: user.id,
     per_page: perPage,
     orderby: "date",
     order: "desc",
