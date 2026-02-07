@@ -45,7 +45,7 @@ const PRICE_TABLE: PriceTable = {
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 209 },
     },
-    "250k": {
+    "150k": {
       wooId: "170",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 309 },
