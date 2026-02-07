@@ -97,7 +97,7 @@ export default function InitModal({
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-[400px] px-2 mx-auto">
         <Input
-          placeholder="Enter your full name"
+          placeholder="Enter your first name"
           value={name}
           onChange={(event) => setName(event.target.value)}
           className="h-12 rounded-xl border border-gray-200 bg-gray-50 px-4 text-gray-900"

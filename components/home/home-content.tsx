@@ -41,6 +41,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [accountSize, setAccountSize] = useState("50k");
   const [platform, setPlatform] = useState("tradovate-ninjatrader");
   const [quantity, setQuantity] = useState(1);
+  const [quantityLimit, setQuantityLimit] = useState<number | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const [recurrence, setRecurrence] = useState<string | null>(null);
   const [wooProductId, setWooProductId] = useState<number | null>(null);
@@ -51,7 +52,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [accountSizeOptions, setAccountSizeOptions] = useState<{ value: string; label: string }[]>([]);
   const [platformOptions, setPlatformOptions] = useState<{ value: string; label: string }[]>([]);
   const [countryCode, setCountryCode] = useState("");
-  const [phoneCode, setPhoneCode] = useState("");
+  const [phoneCode, setPhoneCode] = useState("1");
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -403,11 +404,9 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
 
   const handleCountryChange = (value: string) => {
     setCountryCode(value);
-    if (!phoneCode) {
-      const selectedPhoneCode = countries.find((country) => country.code === value)?.phoneCode;
-      if (selectedPhoneCode) {
-        setPhoneCode(selectedPhoneCode.replace(/^\+/, ""));
-      }
+    const selectedPhoneCode = countries.find((country) => country.code === value)?.phoneCode;
+    if (selectedPhoneCode) {
+      setPhoneCode(selectedPhoneCode.replace(/^\+/, ""));
     }
   };
 
@@ -573,12 +572,14 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           recurrence: string;
           wooProductId?: number | null;
           wooVariantId?: number | null;
+          quantityLimit?: number | null;
         };
         if (isMounted) {
           setPrice(data.price);
           setRecurrence(data.recurrence);
           setWooProductId(data.wooProductId ?? null);
           setWooVariantId(data.wooVariantId ?? null);
+          setQuantityLimit(data.quantityLimit ?? null);
         }
       } catch (error) {
         if (isMounted) {
@@ -586,6 +587,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           setRecurrence(null);
           setWooProductId(null);
           setWooVariantId(null);
+          setQuantityLimit(null);
         }
         console.error(error);
       } finally {
@@ -600,6 +602,13 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       isMounted = false;
     };
   }, [accountType, accountSize, platform]);
+
+  useEffect(() => {
+    if (!quantityLimit) {
+      return;
+    }
+    setQuantity((current) => Math.min(current, quantityLimit));
+  }, [quantityLimit]);
 
   useEffect(() => {
     if (!appliedCoupon) {
@@ -880,7 +889,10 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setQuantity((q) => q + 1)}
+                    onClick={() =>
+                      setQuantity((q) => (quantityLimit ? Math.min(quantityLimit, q + 1) : q + 1))
+                    }
+                    disabled={quantityLimit ? quantity >= quantityLimit : false}
                     aria-label="Increase quantity"
                   >
                     <PlusIcon />
@@ -1001,7 +1013,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
                   disabled={priceLoading || submitLoading}
                   onClick={handleSubmit}
                 >
-                  {priceLoading || submitLoading ? "Loading..." : "Place order"}
+                  {priceLoading || submitLoading ? "Loading..." : "Proceed to Payment"}
                   {priceLoading || submitLoading ? (
                     <Spinner />
                   ) : (

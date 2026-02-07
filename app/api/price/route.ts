@@ -5,7 +5,13 @@ import {
   isWooCommerceConfigured,
 } from "@/lib/woocommerce";
 
-type PriceEntry = { wooId: string; wooVariantId?: string; recurrence: string; platforms: Record<string, number> };
+type PriceEntry = {
+  wooId: string;
+  wooVariantId?: string;
+  recurrence: string;
+  platforms: Record<string, number>;
+  quantityLimit?: number;
+};
 type PriceTable = Record<string, Record<string, PriceEntry>>;
 type Option = { value: string; label: string };
 
@@ -34,21 +40,25 @@ const PRICE_TABLE: PriceTable = {
       wooId: "167",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 69 },
+      quantityLimit: 3,
     },
     "50k": {
       wooId: "168",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 105 },
+      quantityLimit: 3,
     },
     "100k": {
       wooId: "169",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 209 },
+      quantityLimit: 3,
     },
     "150k": {
       wooId: "170",
       recurrence: "monthly",
       platforms: { "tradovate-ninjatrader": 309 },
+      quantityLimit: 3,
     },
   },
   "instant-sim-funded": {
@@ -57,24 +67,28 @@ const PRICE_TABLE: PriceTable = {
       wooVariantId: "137",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 419 },
+      quantityLimit: 5,
     },
     "50k": {
       wooId: "135",
       wooVariantId: "140",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 679 },
+      quantityLimit: 5,
     },
     "100k": {
       wooId: "135",
       wooVariantId: "143",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 821 },
+      quantityLimit: 3,
     },
     "150k": {
       wooId: "135",
       wooVariantId: "146",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 939 },
+      quantityLimit: 3,
     },
   },
   "s2f-sim-pro": {
@@ -83,24 +97,28 @@ const PRICE_TABLE: PriceTable = {
       wooVariantId: "138",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 257 },
+      quantityLimit: 15,
     },
     "50k": {
       wooId: "135",
       wooVariantId: "141",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 421 },
+      quantityLimit: 15,
     },
     "100k": {
       wooId: "135",
       wooVariantId: "144",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 632 },
+      quantityLimit: 15,
     },
     "150k": {
       wooId: "135",
       wooVariantId: "147",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 727 },
+      quantityLimit: 15,
     },
   },
   "ignite-instant": {
@@ -109,18 +127,21 @@ const PRICE_TABLE: PriceTable = {
       wooVariantId: "148",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 218 },
+      quantityLimit: 10,
     },
     "50k": {
       wooId: "135",
       wooVariantId: "149",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 398 },
+      quantityLimit: 10,
     },
     "100k": {
       wooId: "135",
       wooVariantId: "150",
       recurrence: "one time fee",
       platforms: { "tradovate-ninjatrader": 563 },
+      quantityLimit: 10,
     },
   },
 };
@@ -169,6 +190,10 @@ const resolveWooPrice = async (accountType: string, accountSize: string) => {
 
 const resolveRecurrence = (accountType: string, accountSize: string) => {
   return PRICE_TABLE[accountType]?.[accountSize]?.recurrence ?? null;
+};
+
+const resolveQuantityLimit = (accountType: string, accountSize: string) => {
+  return PRICE_TABLE[accountType]?.[accountSize]?.quantityLimit ?? null;
 };
 
 const buildAccountTypeOptions = () => {
@@ -231,6 +256,7 @@ export async function POST(request: NextRequest) {
   const wooIds = resolveWooIds(accountType, accountSize);
   const wooPrice = await resolveWooPrice(accountType, accountSize);
   const resolvedPrice = wooPrice ?? price;
+  const quantityLimit = resolveQuantityLimit(accountType, accountSize);
 
   if (resolvedPrice === null || recurrence === null) {
     return NextResponse.json({ error: "Price not found." }, { status: 404 });
@@ -241,5 +267,6 @@ export async function POST(request: NextRequest) {
     recurrence,
     wooProductId: wooIds?.productId ?? null,
     wooVariantId: wooIds?.variationId ?? null,
+    quantityLimit,
   });
 }

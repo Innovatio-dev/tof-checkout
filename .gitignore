@@ -49,3 +49,4 @@ next-env.d.ts
 # Testing
 /app/data-test
 woocommerce-rest-api-js-lib.md
+security-analysis.md

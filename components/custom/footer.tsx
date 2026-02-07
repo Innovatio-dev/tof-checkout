@@ -106,7 +106,7 @@ const Footer = () => {
         <Separator className="bg-white/5" />
         <div className="flex items-center justify-between text-white/90">
           <div className="flex flex-col gap-10">
-            <div className="max-w-96">© 2025, Top One Futures. All Rights Reserved. Support@TopOneFutures.com</div>
+            <div className="max-w-96">© 2026, Top One Futures. All Rights Reserved. Support@TopOneFutures.com</div>
             <div className="max-w-56">1621 Central Ave, Suite 8433 Cheyenne WY 82001</div>
           </div>
           <div className="hidden sm:flex gap-8">
