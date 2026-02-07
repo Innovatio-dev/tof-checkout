@@ -29,6 +29,7 @@ export default $config({
         SSM_AWS_PRIVATE_KEY: process.env.SSM_AWS_PRIVATE_KEY!,
         APP_DEBUG: "false",
         AUTH_SECRET: process.env.AUTH_SECRET!,
+        INTERNAL_API_TOKEN: process.env.INTERNAL_API_TOKEN!,
       },
       server: {
         runtime: "nodejs22.x",
