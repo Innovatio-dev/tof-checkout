@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCouponByCode } from "@/lib/woocommerce";
+import { SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
+import { getCouponByCode, getUserByEmail, isWooUserAdmin } from "@/lib/woocommerce";
 
 interface CouponResponseData {
   id: number;
@@ -31,9 +33,22 @@ interface CouponResponseData {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const session = await verifySessionCookie(sessionCookie);
+
+  if (!session.valid) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const requester = await getUserByEmail(session.email);
+  if (!isWooUserAdmin(requester)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
   const resolvedParams = await params;
   const code = resolvedParams.code?.trim();
   if (!code) {

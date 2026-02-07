@@ -130,7 +130,11 @@ export type WooCustomer = {
   };
 };
 
-export type WooUser = WooCustomer;
+export type WooUser = WooCustomer & {
+  role?: string;
+  roles?: string[];
+  meta_data?: Array<{ key: string; value: unknown }>;
+};
 
 export type WooUserQuery = {
   per_page?: number;
@@ -324,6 +328,51 @@ export const getUserByEmail = async (email: string) => {
   const users = await getUsers({ email: normalizedEmail });
   const user = users.find((item) => item.email?.trim().toLowerCase() === normalizedEmail) ?? users[0];
   return user ?? null;
+};
+
+const ADMIN_ROLE_SET = new Set(["administrator", "admin", "shop_manager"]);
+
+const extractRolesFromMeta = (metaData: WooUser["meta_data"]) => {
+  if (!metaData) {
+    return [] as string[];
+  }
+
+  const roles: string[] = [];
+  for (const entry of metaData) {
+    const key = entry.key?.toLowerCase();
+    if (!key) {
+      continue;
+    }
+    if (key === "wp_capabilities" || key === "capabilities" || key === "roles") {
+      const value = entry.value;
+      if (Array.isArray(value)) {
+        roles.push(...value.map((item) => String(item)));
+      } else if (typeof value === "string") {
+        roles.push(...value.split(",").map((item) => item.trim()));
+      } else if (value && typeof value === "object") {
+        roles.push(...Object.keys(value as Record<string, unknown>));
+      }
+    }
+  }
+
+  return roles;
+};
+
+export const isWooUserAdmin = (user: WooUser | null | undefined) => {
+  if (!user) {
+    return false;
+  }
+
+  const roles: string[] = [];
+  if (user.role) {
+    roles.push(user.role);
+  }
+  if (user.roles?.length) {
+    roles.push(...user.roles);
+  }
+  roles.push(...extractRolesFromMeta(user.meta_data));
+
+  return roles.some((role) => ADMIN_ROLE_SET.has(role.trim().toLowerCase()));
 };
 
 export const requestEmailOtp = async (email: string) => {
