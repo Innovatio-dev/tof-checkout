@@ -460,6 +460,22 @@ export const createOrder = async (payload: CreateOrderPayload) => {
   return response.data as WooOrder;
 };
 
+export type UpdateOrderPayload = {
+  status?: string;
+  set_paid?: boolean;
+  payment_method?: string;
+  payment_method_title?: string;
+  transaction_id?: string;
+  customer_note?: string;
+  meta_data?: Array<{ key: string; value: string | number | boolean | null }>;
+};
+
+export const updateOrder = async (orderId: number, payload: UpdateOrderPayload) => {
+  const api = getWooCommerceApi();
+  const response = await api.put(`orders/${orderId}`, payload);
+  return response.data as WooOrder;
+};
+
 export const getOrderById = async (orderId: number) => {
   const api = getWooCommerceApi();
   const response = await api.get(`orders/${orderId}`);
