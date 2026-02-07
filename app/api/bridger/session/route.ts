@@ -22,6 +22,11 @@ interface SessionResponse {
 }
 
 export async function POST(request: NextRequest) {
+    const internalToken = request.headers.get("x-internal-token")
+    if (!internalToken || internalToken !== process.env.INTERNAL_API_TOKEN) {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+    }
+
     const body = await request.json()
     const { orderId, accessToken, cashierKey, currency, country, amount, firstName, lastName, phone, email, address, address2, city, state, zipCode } = body
 

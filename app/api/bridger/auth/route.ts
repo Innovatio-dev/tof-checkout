@@ -40,6 +40,11 @@ export interface MerchantAuth {
 }
 
 export async function POST(request: NextRequest) {
+    const internalToken = request.headers.get("x-internal-token")
+    if (!internalToken || internalToken !== process.env.INTERNAL_API_TOKEN) {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+    }
+
     const now = Math.floor(Date.now() / 1000);
     let token: string | null = null;
     let refreshToken: string | null = null;
