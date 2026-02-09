@@ -713,7 +713,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       {!isAuthenticated && <InitModal defaultOpen={!isTesting} isTesting={isTesting} />}
       <div className="flex flex-col md:gap-4 gap-2">
         <h1 className="md:text-6xl text-4xl font-semibold">Checkout</h1>
-        <p className="md:text-lg text-base max-w-md leading-tight">
+        <p className="lg:text-lg md:text-base text-sm max-w-md leading-tight">
           Please fill out the information and get funded.<br />
           {!isAuthenticated &&
             <>
@@ -892,7 +892,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
         {/* MARK: Order Summary */}
         <div className="flex flex-col gap-4 w-full md:w-1/2 lg:min-w-lg md:min-w-md md:shrink-0">
           {/* Second Column */}
-          <div className="flex flex-col gap-4 bg-white/8 border border-white/10 rounded-2xl p-6">
+          <div className="flex flex-col gap-4 bg-white/8 border border-white/10 rounded-2xl md:p-6 p-4">
             <h4 className="text-xl font-semibold">Top One Futures Account</h4>
             <div className="flex flex-wrap gap-2 text-xs min-h-[60px]">
               <span className="flex h-fit items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-white/80">

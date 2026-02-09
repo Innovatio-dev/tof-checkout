@@ -54,7 +54,7 @@ const IpDetectorBlock = () => {
   }, [geo.countryName, geo.countryCode])
 
   return (
-    <div className="flex flex-wrap justify-between bg-white/8 border border-white/10 rounded-2xl px-6 py-5 gap-y-2 gap-x-1 select-none text-sm md:text-base">
+    <div className="flex flex-wrap justify-between bg-white/8 border border-white/10 rounded-2xl md:px-6 px-4 md:py-5 py-4 gap-y-2 gap-x-1 select-none text-sm md:text-base">
       <div className="flex items-center md:gap-3 gap-2">
         {geo.countryCode ? (
           <SnappFlag code={geo.countryCode} className="h-auto md:w-7 w-5 shrink-0" />
