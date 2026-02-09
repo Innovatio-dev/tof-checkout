@@ -37,11 +37,6 @@ interface BodyPayload {
 }
 
 export async function POST(request: NextRequest) {
-    const internalToken = request.headers.get("x-internal-token")
-    if (!internalToken || internalToken !== process.env.INTERNAL_API_TOKEN) {
-        return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
-    }
-
     const body = await request.json() as BodyPayload
     const cashierKey = process.env.BRIDGER_PAY_CASHIER_KEY
 
