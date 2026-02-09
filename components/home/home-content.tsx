@@ -28,6 +28,7 @@ import { useUserStore } from "@/lib/user-store";
 import { useShallow } from "zustand/react/shallow";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { useLoginModalStore } from "@/components/custom/login-modal";
+import ConfirmActionDialog from "@/components/custom/confirm-action-dialog";
 
 type HomeContentProps = {
   isAuthenticated?: boolean
@@ -81,6 +82,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   >(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [paymentData, setPaymentData] = useState<{ cashierKey: string; cashierToken: string } | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const { email: storedEmail, firstName: storedFirstName, lastName: storedLastName } = useUserStore(
@@ -603,6 +605,16 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     };
   }, [accountType, accountSize, platform]);
 
+  const handlePaymentModalOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setConfirmCancelOpen(true);
+      setPaymentModalOpen(true);
+      return;
+    }
+
+    setPaymentModalOpen(true);
+  };
+
   useEffect(() => {
     if (!quantityLimit) {
       return;
@@ -657,8 +669,15 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   return (
     <div className="flex flex-col gap-10 font-sans text-white">
       {/* MARK: Payment Modal */}
-      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="max-w-[960px] w-[96vw] p-1 bg-[#363636] rounded-2xl" showCloseButton={false}>
+      <Dialog open={paymentModalOpen} onOpenChange={handlePaymentModalOpenChange}>
+        <DialogContent
+          className="max-w-[960px] w-[96vw] p-1 bg-[#363636] rounded-2xl"
+          showCloseButton
+          onPointerDownOutside={(event) => {
+            event.preventDefault();
+            setConfirmCancelOpen(true);
+          }}
+        >
           <DialogTitle className="sr-only">Bridger Pay Checkout</DialogTitle>
           <div className="w-full">
             <iframe
@@ -671,6 +690,23 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmActionDialog
+        open={confirmCancelOpen}
+        onOpenChange={setConfirmCancelOpen}
+        title="Cancel payment?"
+        description="If you leave now, your payment will not be completed."
+        confirmLabel="Yes, cancel payment"
+        cancelLabel="Continue checkout"
+        confirmVariant="destructive"
+        onConfirm={() => {
+          setConfirmCancelOpen(false);
+          setPaymentModalOpen(false);
+        }}
+        onCancel={() => {
+          setConfirmCancelOpen(false);
+        }}
+      />
 
       {/* MARK: Init Modal */}
       {!isAuthenticated && <InitModal defaultOpen={!isTesting} isTesting={isTesting} />}
