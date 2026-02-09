@@ -742,7 +742,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           <div className="flex flex-col gap-4">
             <InstructionItem number={1} caption="Confirm trading account information" />
             <FormSection title="Account type">
-              <RadioGroup value={accountType} onValueChange={setAccountType} className="grid grid-cols-2 gap-2">
+              <RadioGroup value={accountType} onValueChange={setAccountType} className="grid grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-2">
                 {accountTypeOptions.map((option) => (
                   <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} tag={option.value === "s2f-sim-pro" ? "Highest Payouts" : option.value === "ignite-instant" ? "Most Popular" : ""} />
                 ))}
@@ -750,7 +750,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
             </FormSection>
 
             <FormSection title="Account size">
-              <RadioGroup value={accountSize} onValueChange={setAccountSize} className="grid grid-cols-2 gap-2">
+              <RadioGroup value={accountSize} onValueChange={setAccountSize} className="grid grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-2">
                 {accountSizeOptions.map((option) => (
                   <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
                 ))}
@@ -758,7 +758,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
             </FormSection>
 
             <FormSection title="Platform">
-              <RadioGroup value={platform} onValueChange={setPlatform} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <RadioGroup value={platform} onValueChange={setPlatform} className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 {platformOptions.map((option) => (
                   <TofRadioItem key={option.value} id={option.value} value={option.value} label={option.label} />
                 ))}
