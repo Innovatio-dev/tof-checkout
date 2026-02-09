@@ -52,7 +52,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [accountTypeOptions, setAccountTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [accountSizeOptions, setAccountSizeOptions] = useState<{ value: string; label: string }[]>([]);
   const [platformOptions, setPlatformOptions] = useState<{ value: string; label: string }[]>([]);
-  const [countryCode, setCountryCode] = useState("US");
+  const [countryCode, setCountryCode] = useState("us");
   const [phoneCode, setPhoneCode] = useState("1");
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -391,7 +391,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const activeIframeSrcDoc = paymentMethod === "wallet" ? walletIframeSrcDoc : iframeSrcDoc;
 
   const selectedCountry = useMemo(
-    () => countries.find((country) => country.code === countryCode),
+    () => countries.find((country) => country.code === countryCode.toLowerCase()),
     [countryCode]
   );
 
@@ -399,14 +399,15 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     if (!phoneCode) {
       return undefined;
     }
-    return countries.reverse().find(
+    return [...countries].reverse().find(
       (country) => country.phoneCode?.replace(/^\+/, "") === phoneCode
     );
   }, [phoneCode]);
 
   const handleCountryChange = (value: string) => {
-    setCountryCode(value);
-    const selectedPhoneCode = countries.find((country) => country.code === value)?.phoneCode;
+    const normalizedValue = value.toLowerCase();
+    setCountryCode(normalizedValue);
+    const selectedPhoneCode = countries.find((country) => country.code === normalizedValue)?.phoneCode;
     if (selectedPhoneCode) {
       setPhoneCode(selectedPhoneCode.replace(/^\+/, ""));
     }
