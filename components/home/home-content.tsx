@@ -677,7 +677,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       <div className="flex flex-col md:gap-4 gap-2">
         <h1 className="md:text-6xl text-4xl font-semibold">Checkout</h1>
         <p className="md:text-lg text-base max-w-md leading-tight">
-          Please fill out the information and get funded.
+          Please fill out the information and get funded.<br />
           {!isAuthenticated &&
             <>
               Existing customer?{" "}
