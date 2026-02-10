@@ -63,7 +63,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [state, setState] = useState("");
   const [postcode, setPostcode] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [newsletter, setNewsletter] = useState(false);
+  const [newsletter] = useState(true);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -911,7 +911,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
                 {fieldErrors.phoneNumber && <span className="text-sm text-red-400">{fieldErrors.phoneNumber}</span>}
               </div>
 
-              <div className="col-span-10 py-2">
+              {/* <div className="col-span-10 py-2">
                 <TofCheckbox
                   id="newsletter"
                   name="newsletter"
@@ -919,7 +919,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
                   checked={newsletter}
                   onCheckedChange={setNewsletter}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
