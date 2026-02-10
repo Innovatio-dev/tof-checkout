@@ -169,34 +169,34 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
         const resolvedPhoneCode = phoneMatch?.[1] ?? ""
         const resolvedPhoneNumber = phoneMatch?.[2] ?? ""
 
-        if (!email && (billing.email || data.user.email)) {
+        if (billing.email || data.user.email) {
           setEmail(billing.email ?? data.user.email ?? "")
         }
-        if (!firstName && resolveName(billing.first_name, data.user.first_name)) {
+        if (resolveName(billing.first_name, data.user.first_name)) {
           setFirstName(resolveName(billing.first_name, data.user.first_name))
         }
-        if (!lastName && resolveName(billing.last_name, data.user.last_name)) {
+        if (resolveName(billing.last_name, data.user.last_name)) {
           setLastName(resolveName(billing.last_name, data.user.last_name))
         }
-        if (!address1 && billing.address_1) {
+        if (billing.address_1) {
           setAddress1(billing.address_1)
         }
-        if (!address2 && billing.address_2) {
+        if (billing.address_2) {
           setAddress2(billing.address_2)
         }
-        if (!city && billing.city) {
+        if (billing.city) {
           setCity(billing.city)
         }
-        if (!postcode && billing.postcode) {
+        if (billing.postcode) {
           setPostcode(billing.postcode)
         }
-        if (!countryCode && normalizedCountry) {
+        if (normalizedCountry) {
           setCountryCode(normalizedCountry)
         }
-        if (!phoneCode && resolvedPhoneCode) {
+        if (resolvedPhoneCode) {
           setPhoneCode(resolvedPhoneCode)
         }
-        if (!phoneNumber && resolvedPhoneNumber) {
+        if (resolvedPhoneNumber) {
           setPhoneNumber(resolvedPhoneNumber)
         }
       } catch (error) {

@@ -12,6 +12,10 @@ export default async function AccountPage() {
     if (!session.valid) return null;
     return getUserByEmail(session.email);
   })();
+  console.log("[account] customer payload", {
+    email: session.valid ? session.email : null,
+    customer,
+  });
   const orders = await (async () => {
     if (!customer) return [] as WooOrder[];
     return getOrdersByCustomerId({ customerId: customer.id });
@@ -23,6 +27,26 @@ export default async function AccountPage() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/50">Account</p>
           <h1 className="mt-2 text-4xl font-semibold">Welcome back</h1>
+          <div className="mt-6 rounded-2xl border border-neon-green/30 bg-white/5 p-5">
+            <div className="grid gap-1 text-xs text-white/80">
+              <div>
+                <span className="text-white/50">ID:</span> {customer?.id ?? "—"}
+              </div>
+              <div>
+                <span className="text-white/50">Name:</span>{" "}
+                {customer
+                  ? (
+                      `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim() ||
+                      `${customer.billing?.first_name ?? ""} ${customer.billing?.last_name ?? ""}`.trim() ||
+                      "—"
+                    )
+                  : "—"}
+              </div>
+              <div>
+                <span className="text-white/50">Email:</span> {session.valid ? session.email : "—"}
+              </div>
+            </div>
+          </div>
           <p className="mt-2 max-w-2xl text-white/60">
             Manage your orders, subscription settings, credits, and billing details from one place.
           </p>
