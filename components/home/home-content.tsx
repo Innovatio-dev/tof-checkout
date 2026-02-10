@@ -165,9 +165,19 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
         const resolveName = (billingValue?: string, userValue?: string) => billingValue || userValue || ""
         const normalizedCountry = billing.country?.trim().toLowerCase() ?? ""
         const phoneValue = billing.phone?.trim() ?? ""
-        const phoneMatch = phoneValue.match(/^\+?(\d{1,4})(\d+)$/)
-        const resolvedPhoneCode = phoneMatch?.[1] ?? ""
-        const resolvedPhoneNumber = phoneMatch?.[2] ?? ""
+        const normalizedPhone = phoneValue.replace(/\D/g, "")
+        const billingCountryPhoneCode = normalizedCountry
+          ? countries.find((country) => country.code === normalizedCountry)?.phoneCode?.replace(/^\+/, "")
+          : undefined
+        const phoneCodeCandidates = [...countries]
+          .map((country) => country.phoneCode?.replace(/^\+/, ""))
+          .filter((code): code is string => Boolean(code))
+          .sort((a, b) => b.length - a.length)
+        const resolvedPhoneCode =
+          (billingCountryPhoneCode && normalizedPhone.startsWith(billingCountryPhoneCode)
+            ? billingCountryPhoneCode
+            : phoneCodeCandidates.find((code) => normalizedPhone.startsWith(code))) ?? ""
+        const resolvedPhoneNumber = resolvedPhoneCode ? normalizedPhone.slice(resolvedPhoneCode.length) : normalizedPhone
 
         if (billing.email || data.user.email) {
           setEmail(billing.email ?? data.user.email ?? "")
@@ -691,7 +701,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           </div>
         </DialogContent>
       </Dialog>
-
+      {/* MARK: Confirm Cancel Modal */}
       <ConfirmActionDialog
         open={confirmCancelOpen}
         onOpenChange={setConfirmCancelOpen}
