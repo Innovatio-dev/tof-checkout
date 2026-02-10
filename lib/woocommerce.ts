@@ -326,8 +326,24 @@ export const getUserByEmail = async (email: string) => {
   }
 
   const users = await getUsers({ email: normalizedEmail });
-  const user = users.find((item) => item.email?.trim().toLowerCase() === normalizedEmail) ?? users[0];
-  return user ?? null;
+  const matchedUser = users.find((item) => item.email?.trim().toLowerCase() === normalizedEmail) ?? users[0];
+  if (matchedUser) {
+    return matchedUser;
+  }
+
+  const searchedUsers = await getUsers({ search: normalizedEmail });
+  const searchedMatch =
+    searchedUsers.find((item) => item.email?.trim().toLowerCase() === normalizedEmail) ??
+    searchedUsers[0];
+  if (searchedMatch) {
+    return searchedMatch;
+  }
+
+  const subscriberUsers = await getUsers({ search: normalizedEmail, role: "subscriber" });
+  const subscriberMatch =
+    subscriberUsers.find((item) => item.email?.trim().toLowerCase() === normalizedEmail) ??
+    subscriberUsers[0];
+  return subscriberMatch ?? null;
 };
 
 const ADMIN_ROLE_SET = new Set(["administrator", "admin", "shop_manager"]);
