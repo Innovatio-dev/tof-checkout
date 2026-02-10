@@ -60,6 +60,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
   const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [postcode, setPostcode] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [newsletter, setNewsletter] = useState(false);
@@ -453,6 +454,9 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     if (!city.trim()) {
       errors.city = "City is required.";
     }
+    if (!state.trim()) {
+      errors.state = "State / province is required.";
+    }
     if (!postcode.trim()) {
       errors.postcode = "Postcode is required.";
     }
@@ -499,6 +503,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           address1,
           address2,
           city,
+          state,
           postcode,
           phoneCode,
           phoneNumber,
@@ -542,7 +547,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           address: address1,
           address2: address2 || undefined,
           city,
-          state: "",
+          state,
           zipCode: postcode,
           wooProductId,
           wooVariantId,
@@ -844,7 +849,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
               </div>
               <Input
                 placeholder="Apartment, suite, etc. (optional)"
-                className="col-span-10"
+                className="col-span-5"
                 value={address2}
                 onChange={(event) => setAddress2(event.target.value)}
               />
@@ -856,6 +861,15 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
                   aria-invalid={Boolean(fieldErrors.city)}
                 />
                 {fieldErrors.city && <span className="text-sm text-red-400">{fieldErrors.city}</span>}
+              </div>
+              <div className="col-span-5 flex flex-col gap-2">
+                <Input
+                  placeholder="State / Province"
+                  value={state}
+                  onChange={(event) => setState(event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.state)}
+                />
+                {fieldErrors.state && <span className="text-sm text-red-400">{fieldErrors.state}</span>}
               </div>
               <div className="col-span-5 flex flex-col gap-2">
                 <Input

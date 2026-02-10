@@ -4,10 +4,12 @@ import {
   createCustomer,
   createOrder,
   getCustomersByEmail,
+  updateCustomer,
   type CreateOrderPayload,
 } from "@/lib/woocommerce";
 import { validateCoupon } from "@/lib/discounts";
 import { getProductById, getProductVariationById } from "@/lib/woocommerce";
+import { SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
 
 type CheckoutPayload = {
   email?: string;
@@ -17,6 +19,7 @@ type CheckoutPayload = {
   address1?: string;
   address2?: string;
   city?: string;
+  state?: string;
   postcode?: string;
   phoneCode?: string;
   phoneNumber?: string;
@@ -40,6 +43,7 @@ export async function POST(request: NextRequest) {
     "countryCode",
     "address1",
     "city",
+    "state",
     "postcode",
     "phoneCode",
     "phoneNumber",
@@ -67,33 +71,41 @@ export async function POST(request: NextRequest) {
 
   const email = payload.email!.trim().toLowerCase();
   const existingCustomers = await getCustomersByEmail(email);
-  const customer =
-    existingCustomers[0] ??
-    (await createCustomer({
-      email,
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = await verifySessionCookie(sessionCookie);
+  const customerPayload = {
+    email,
+    first_name: payload.firstName,
+    last_name: payload.lastName,
+    billing: {
       first_name: payload.firstName,
       last_name: payload.lastName,
-      billing: {
-        first_name: payload.firstName,
-        last_name: payload.lastName,
-        address_1: payload.address1,
-        address_2: payload.address2 ?? "",
-        city: payload.city,
-        postcode: payload.postcode,
-        country: payload.countryCode,
-        phone: `+${payload.phoneCode}${payload.phoneNumber}`,
-        email,
-      },
-      shipping: {
-        first_name: payload.firstName,
-        last_name: payload.lastName,
-        address_1: payload.address1,
-        address_2: payload.address2 ?? "",
-        city: payload.city,
-        postcode: payload.postcode,
-        country: payload.countryCode,
-      },
-    }));
+      address_1: payload.address1,
+      address_2: payload.address2 ?? "",
+      city: payload.city,
+      state: payload.state,
+      postcode: payload.postcode,
+      country: payload.countryCode,
+      phone: `+${payload.phoneCode}${payload.phoneNumber}`,
+      email,
+    },
+    shipping: {
+      first_name: payload.firstName,
+      last_name: payload.lastName,
+      address_1: payload.address1,
+      address_2: payload.address2 ?? "",
+      city: payload.city,
+      state: payload.state,
+      postcode: payload.postcode,
+      country: payload.countryCode,
+    },
+  };
+  const existingCustomer = existingCustomers[0];
+  const customer = existingCustomer
+    ? session.valid && session.email.trim().toLowerCase() === email
+      ? await updateCustomer(existingCustomer.id, customerPayload)
+      : existingCustomer
+    : await createCustomer(customerPayload);
 
   const productId = payload.wooProductId;
   if (!productId || !Number.isFinite(productId)) {
@@ -131,6 +143,7 @@ export async function POST(request: NextRequest) {
       address_1: payload.address1,
       address_2: payload.address2 ?? "",
       city: payload.city,
+      state: payload.state,
       postcode: payload.postcode,
       country: payload.countryCode,
       phone: `+${payload.phoneCode}${payload.phoneNumber}`,
@@ -142,6 +155,7 @@ export async function POST(request: NextRequest) {
       address_1: payload.address1,
       address_2: payload.address2 ?? "",
       city: payload.city,
+      state: payload.state,
       postcode: payload.postcode,
       country: payload.countryCode,
     },

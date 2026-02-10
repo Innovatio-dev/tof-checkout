@@ -301,6 +301,10 @@ export type CreateCustomerPayload = {
   shipping?: Record<string, unknown>;
 };
 
+export type UpdateCustomerPayload = Omit<CreateCustomerPayload, "email"> & {
+  email?: string;
+};
+
 export const createCustomer = async (payload: CreateCustomerPayload) => {
   const api = getWooCommerceApi();
   try {
@@ -316,6 +320,12 @@ export const createCustomer = async (payload: CreateCustomerPayload) => {
     }
     throw error;
   }
+};
+
+export const updateCustomer = async (customerId: number, payload: UpdateCustomerPayload) => {
+  const api = getWooCommerceApi();
+  const response = await api.put(`customers/${customerId}`, payload);
+  return response.data as WooCustomer;
 };
 
 export const getCustomersByEmail = async (email: string) => {
