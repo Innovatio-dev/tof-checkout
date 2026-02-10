@@ -16,20 +16,26 @@ type LoginModalStep = "email" | "otp" | "success"
 type LoginModalStore = {
   open: boolean
   setOpen: (open: boolean) => void
-  openModal: () => void
+  openModal: (onSuccess?: () => void) => void
   closeModal: () => void
+  successHandler?: (() => void) | null
+  clearSuccessHandler: () => void
 }
 
 export const useLoginModalStore = create<LoginModalStore>((set) => ({
   open: false,
   setOpen: (open) => set({ open }),
-  openModal: () => set({ open: true }),
-  closeModal: () => set({ open: false }),
+  openModal: (onSuccess) => set({ open: true, successHandler: onSuccess ?? null }),
+  closeModal: () => set({ open: false, successHandler: null }),
+  successHandler: null,
+  clearSuccessHandler: () => set({ successHandler: null }),
 }))
 
 export default function LoginModal() {
   const open = useLoginModalStore((state) => state.open)
   const setOpen = useLoginModalStore((state) => state.setOpen)
+  const successHandler = useLoginModalStore((state) => state.successHandler)
+  const clearSuccessHandler = useLoginModalStore((state) => state.clearSuccessHandler)
   const router = useRouter()
 
   const [step, setStep] = useState<LoginModalStep>("email")
@@ -41,6 +47,7 @@ export default function LoginModal() {
   const [verifyingOtp, setVerifyingOtp] = useState(false)
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const lastAttemptedOtpRef = useRef<string | null>(null)
+  const successHandledRef = useRef(false)
 
   const emailValid = useMemo(() => /\S+@\S+\.\S+/.test(email), [email])
 
@@ -55,6 +62,7 @@ export default function LoginModal() {
       setVerifyingOtp(false)
       setVerifyError(null)
       lastAttemptedOtpRef.current = null
+      successHandledRef.current = false
     }
   }, [open])
 
@@ -63,6 +71,18 @@ export default function LoginModal() {
       lastAttemptedOtpRef.current = null
     }
   }, [step])
+
+  useEffect(() => {
+    if (step !== "success" || successHandledRef.current) {
+      return
+    }
+
+    successHandledRef.current = true
+    successHandler?.()
+    clearSuccessHandler()
+    setOpen(false)
+    router.refresh()
+  }, [clearSuccessHandler, router, setOpen, step, successHandler])
 
   useEffect(() => {
     if (step !== "otp") {
@@ -263,6 +283,7 @@ export default function LoginModal() {
                 size="lg"
                 className="w-full font-bold"
                 onClick={() => {
+                  clearSuccessHandler()
                   setOpen(false)
                   router.refresh()
                 }}
@@ -274,6 +295,7 @@ export default function LoginModal() {
                 size="lg"
                 className="w-full font-bold"
                 onClick={() => {
+                  clearSuccessHandler()
                   setOpen(false)
                   router.push("/account")
                 }}

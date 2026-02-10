@@ -471,10 +471,17 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   };
 
   /* MARK: Submit function */
-  const handleSubmit = async () => {
+  const handleSubmit = async (skipAuthCheck = false) => {
     setSubmitError(null)
     setSubmitSuccess(null)
     if (!validateForm()) {
+      return
+    }
+
+    if (!skipAuthCheck && !isAuthenticated) {
+      openLoginModal(() => {
+        handleSubmit(true)
+      })
       return
     }
 
@@ -1062,7 +1069,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
                   className="w-full font-bold h-12 white-glow"
                   variant="primary"
                   disabled={priceLoading || submitLoading}
-                  onClick={handleSubmit}
+                  onClick={() => handleSubmit()}
                 >
                   {priceLoading || submitLoading ? "Loading..." : "Proceed to Payment"}
                   {priceLoading || submitLoading ? (

@@ -303,8 +303,19 @@ export type CreateCustomerPayload = {
 
 export const createCustomer = async (payload: CreateCustomerPayload) => {
   const api = getWooCommerceApi();
-  const response = await api.post("customers", payload);
-  return response.data as WooCustomer;
+  try {
+    const response = await api.post("customers", payload);
+    return response.data as WooCustomer;
+  } catch (error) {
+    const normalizedEmail = payload.email?.trim().toLowerCase();
+    if (normalizedEmail) {
+      const existingUser = await getUserByEmail(normalizedEmail);
+      if (existingUser) {
+        return existingUser;
+      }
+    }
+    throw error;
+  }
 };
 
 export const getCustomersByEmail = async (email: string) => {
