@@ -2,7 +2,7 @@ import { StringArray } from "aws-sdk/clients/rdsdataservice"
 import { NextRequest, NextResponse } from "next/server"
 
 import { debugError, debugLog } from "@/lib/debug"
-import { getProductById, getProductVariationById } from "@/lib/woocommerce"
+import { getProductById, getProductVariationById, updateOrder } from "@/lib/woocommerce"
 import { validateCoupon } from "@/lib/discounts"
 
 interface AuthResponse {
@@ -16,6 +16,7 @@ interface SessionResponse {
 export interface PayResponse {
     cashierKey: string
     cashierToken: string
+    skipPayment?: boolean
 }
 
 interface BodyPayload {
@@ -87,6 +88,25 @@ export async function POST(request: NextRequest) {
         }
 
         totalAmount = validation.totalAfterDiscount
+    }
+
+    if (totalAmount <= 0) {
+        debugLog("[DEBUG::Pay] Zero total detected, completing order", { orderId: body.orderId })
+        const orderId = Number(body.orderId)
+
+        if (!Number.isFinite(orderId)) {
+            return NextResponse.json({ error: "Invalid order ID." }, { status: 400 })
+        }
+
+        await updateOrder(orderId, {
+            status: "completed",
+            set_paid: true,
+            payment_method: "coupon",
+            payment_method_title: "Coupon",
+        })
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
+        return NextResponse.json({ cashierKey: "", cashierToken: "", skipPayment: true })
     }
 
     try {

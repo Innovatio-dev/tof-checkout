@@ -544,6 +544,10 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       })
 
       const bridgerData = (await bridgerResponse.json()) as PayResponse
+      if (bridgerData.skipPayment) {
+        window.location.href = "/thank-you"
+        return
+      }
       if (!bridgerData.cashierKey || !bridgerData.cashierToken) {
         throw new Error("Failed to start payment process.")
       }
