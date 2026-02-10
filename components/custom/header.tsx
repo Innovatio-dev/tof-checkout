@@ -28,7 +28,7 @@ const Header = ({ isAuthenticated = false }: HeaderProps) => {
               </Button>
             </Link>
           ) : (
-            <Button variant="outline" size="lg" onClick={openModal}>
+            <Button variant="outline" size="lg" onClick={() => openModal()}>
               Log In
             </Button>
           )}
