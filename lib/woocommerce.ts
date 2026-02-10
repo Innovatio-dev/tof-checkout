@@ -87,6 +87,7 @@ export type WooCouponDetail = {
   limit_usage_to_x_items?: number | null;
   product_categories?: number[];
   excluded_product_categories?: number[];
+  excluded_coupons_categories_ids?: number[] | null;
   exclude_sale_items?: boolean;
   minimum_amount?: string;
   maximum_amount?: string;
@@ -285,6 +286,8 @@ export const getCouponByCode = async (code: string) => {
     limit_usage_to_x_items: coupon.limit_usage_to_x_items,
     product_categories: coupon.product_categories,
     excluded_product_categories: coupon.excluded_product_categories,
+    excluded_coupons_categories_ids: (coupon as { excluded_coupons_categories_ids?: number[] | null })
+      .excluded_coupons_categories_ids,
     exclude_sale_items: coupon.exclude_sale_items,
     minimum_amount: coupon.minimum_amount,
     maximum_amount: coupon.maximum_amount,

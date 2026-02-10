@@ -10,6 +10,7 @@ import {
 import { validateCoupon } from "@/lib/discounts";
 import { getProductById, getProductVariationById } from "@/lib/woocommerce";
 import { SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
+import { canStackCoupons, type StackableCoupon } from "@/lib/coupon-stacking";
 
 type CheckoutPayload = {
   email?: string;
@@ -30,7 +31,7 @@ type CheckoutPayload = {
   newsletter?: boolean;
   wooProductId?: number | null;
   wooVariantId?: number | null;
-  couponCode?: string | null;
+  couponCodes?: string[] | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -162,18 +163,50 @@ export async function POST(request: NextRequest) {
     customer_note: `Account type: ${payload.accountType}\nAccount size: ${payload.accountSize}\nPlatform: ${payload.platform}\nNewsletter: ${payload.newsletter ? "yes" : "no"}`,
   };
 
-  const couponCode = payload.couponCode?.trim();
-  if (couponCode) {
-    const validation = await validateCoupon({
-      code: couponCode,
-      email,
-      productId,
-      total: unitPrice * sanitizedQuantity,
-    });
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.reason ?? "Invalid coupon." }, { status: 400 });
+  const rawCouponCodes = Array.isArray(payload.couponCodes)
+    ? payload.couponCodes
+    : typeof payload.couponCodes === "string"
+      ? [payload.couponCodes]
+      : [];
+  const couponCodes = rawCouponCodes.map((code) => code.trim()).filter(Boolean).slice(0, 2);
+  if (couponCodes.length) {
+    const appliedCoupons: StackableCoupon[] = [];
+    let runningTotal = unitPrice * sanitizedQuantity;
+
+    for (const code of couponCodes) {
+      const validation = await validateCoupon({
+        code,
+        email,
+        productId,
+        total: runningTotal,
+      });
+      if (!validation.valid || !validation.coupon) {
+        return NextResponse.json({ error: validation.reason ?? "Invalid coupon." }, { status: 400 });
+      }
+
+      const stackCheck = canStackCoupons(appliedCoupons, {
+        code: validation.coupon.code,
+        individual_use: validation.coupon.individual_use,
+        product_categories: validation.coupon.product_categories ?? null,
+        excluded_product_categories: validation.coupon.excluded_product_categories ?? null,
+        excluded_coupons_categories_ids: validation.coupon.excluded_coupons_categories_ids ?? null,
+      });
+
+      if (!stackCheck.allowed) {
+        return NextResponse.json({ error: stackCheck.reason ?? "Coupons cannot be stacked." }, { status: 400 });
+      }
+
+      appliedCoupons.push({
+        code: validation.coupon.code,
+        individual_use: validation.coupon.individual_use,
+        product_categories: validation.coupon.product_categories ?? null,
+        excluded_product_categories: validation.coupon.excluded_product_categories ?? null,
+        excluded_coupons_categories_ids: validation.coupon.excluded_coupons_categories_ids ?? null,
+      });
+      runningTotal = validation.totalAfterDiscount;
     }
-    orderPayload.coupon_lines = [{ code: couponCode }];
+
+    orderPayload.coupon_lines = appliedCoupons.map((coupon) => ({ code: coupon.code }));
   }
 
   // TODO: add the Gateway payment integration.

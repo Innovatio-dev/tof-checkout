@@ -29,6 +29,7 @@ import { useShallow } from "zustand/react/shallow";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { useLoginModalStore } from "@/components/custom/login-modal";
 import ConfirmActionDialog from "@/components/custom/confirm-action-dialog";
+import { canStackCoupons } from "@/lib/coupon-stacking";
 
 type HomeContentProps = {
   isAuthenticated?: boolean
@@ -71,16 +72,19 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState<
-    | {
-        code: string;
-        description?: string;
-        discountAmount: number;
-        discountType?: string;
-        amount?: string;
-      }
-    | null
-  >(null);
+  const [appliedCoupons, setAppliedCoupons] = useState<
+    Array<{
+      code: string;
+      description?: string;
+      discountAmount: number;
+      discountType?: string;
+      amount?: string;
+      individual_use?: boolean;
+      product_categories?: number[] | null;
+      excluded_product_categories?: number[] | null;
+      excluded_coupons_categories_ids?: number[] | null;
+    }>
+  >([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
@@ -266,32 +270,36 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     resize?.({ checkOrigin: false }, iframe)
   }
 
+  const totalDiscountAmount = useMemo(() => {
+    return appliedCoupons.reduce((sum, coupon) => sum + (coupon.discountAmount ?? 0), 0);
+  }, [appliedCoupons]);
+
   const formattedTotalPrice = useMemo(() => {
     if (price === null) {
       return "—";
     }
-    const total = Math.max(0, price * quantity - (appliedCoupon?.discountAmount ?? 0));
+    const total = Math.max(0, price * quantity - totalDiscountAmount);
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(total);
-  }, [appliedCoupon?.discountAmount, price, quantity]);
+  }, [price, quantity, totalDiscountAmount]);
 
-  const formattedDiscount = useMemo(() => {
-    if (!appliedCoupon?.discountAmount) {
-      return "";
-    }
-    return new Intl.NumberFormat("en-US", {
+  const formatDiscount = (value: number) =>
+    new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-    }).format(appliedCoupon.discountAmount);
-  }, [appliedCoupon?.discountAmount]);
+    }).format(value);
 
   const handleApplyCoupon = async (event: React.FormEvent) => {
     event.preventDefault()
     setPromoError(null);
     if (!promoCode.trim()) {
       setPromoError("Enter a promo code.");
+      return;
+    }
+    if (appliedCoupons.length >= 2) {
+      setPromoError("You can stack up to two promo codes.");
       return;
     }
     if (!email.trim()) {
@@ -312,7 +320,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           code: promoCode.trim(),
           email,
           productId: wooProductId,
-          total: price * quantity,
+          total: Math.max(0, price * quantity - totalDiscountAmount),
         }),
       });
 
@@ -321,7 +329,16 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
         reason?: string;
         discountAmount?: number;
         totalAfterDiscount?: number;
-        coupon?: { code: string; description?: string; discount_type?: string; amount?: string } | null;
+        coupon?: {
+          code: string;
+          description?: string;
+          discount_type?: string;
+          amount?: string;
+          individual_use?: boolean;
+          product_categories?: number[] | null;
+          excluded_product_categories?: number[] | null;
+          excluded_coupons_categories_ids?: number[] | null;
+        } | null;
         error?: string;
       };
 
@@ -330,20 +347,38 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       }
 
       if (!data.valid || !data.coupon || !data.discountAmount) {
-        setAppliedCoupon(null);
         setPromoError(data.reason ?? "Promo code could not be applied.");
         return;
       }
 
-      setAppliedCoupon({
+      const stackCheck = canStackCoupons(appliedCoupons, {
         code: data.coupon.code,
-        description: data.coupon.description,
-        discountType: data.coupon.discount_type,
-        amount: data.coupon.amount,
-        discountAmount: data.discountAmount,
+        individual_use: data.coupon.individual_use,
+        product_categories: data.coupon.product_categories,
+        excluded_product_categories: data.coupon.excluded_product_categories,
+        excluded_coupons_categories_ids: data.coupon.excluded_coupons_categories_ids,
       });
+
+      if (!stackCheck.allowed) {
+        setPromoError(stackCheck.reason ?? "This promo code cannot be combined.");
+        return;
+      }
+
+      setAppliedCoupons((prev) =>
+        [...prev, {
+          code: data.coupon!.code,
+          description: data.coupon!.description,
+          discountType: data.coupon!.discount_type,
+          amount: data.coupon!.amount,
+          discountAmount: data.discountAmount ?? 0,
+          individual_use: data.coupon!.individual_use,
+          product_categories: data.coupon!.product_categories ?? null,
+          excluded_product_categories: data.coupon!.excluded_product_categories ?? null,
+          excluded_coupons_categories_ids: data.coupon!.excluded_coupons_categories_ids ?? null,
+        }].slice(0, 2)
+      );
+      setPromoCode("");
     } catch (error) {
-      setAppliedCoupon(null);
       setPromoError(error instanceof Error ? error.message : "Failed to apply promo code.");
     } finally {
       setPromoLoading(false);
@@ -514,7 +549,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           newsletter,
           wooProductId,
           wooVariantId,
-          couponCode: appliedCoupon?.code ?? null,
+          couponCodes: appliedCoupons.map((coupon) => coupon.code),
         }),
       })
 
@@ -551,7 +586,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           zipCode: postcode,
           wooProductId,
           wooVariantId,
-          couponCode: appliedCoupon?.code ?? null,
+          couponCodes: appliedCoupons.map((coupon) => coupon.code),
         }),
       })
 
@@ -650,10 +685,10 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   }, [quantityLimit]);
 
   useEffect(() => {
-    if (!appliedCoupon) {
+    if (!appliedCoupons.length) {
       return;
     }
-    setAppliedCoupon(null);
+    setAppliedCoupons([]);
     setPromoError(null);
   }, [accountType, accountSize, platform, quantity, price, wooProductId, email]);
 
@@ -986,7 +1021,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
               <div>Total</div>
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-3">
-                  {appliedCoupon && !priceLoading ? (
+                  {appliedCoupons.length > 0 && !priceLoading ? (
                     <div className="text-lg text-white/30 line-through">
                       {new Intl.NumberFormat("en-US", {
                         style: "currency",
@@ -1006,31 +1041,41 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
               </div>
             </div>
 
-            {appliedCoupon ? (
-              <PromoCodeCard
-                code={appliedCoupon.code}
-                description={appliedCoupon.description}
-                discountLabel={formattedDiscount}
-                onRemove={() => {
-                  setAppliedCoupon(null);
-                  setPromoCode("");
-                }}
-              />
-            ) : (
-              <div className="flex flex-col gap-2">
-                <form className="flex items-center gap-2" onSubmit={handleApplyCoupon}>
-                  <Input
-                    placeholder="Enter promo code"
-                    value={promoCode}
-                    onChange={(event) => setPromoCode(event.target.value)}
-                  />
-                  <Button variant="primary" size="lg" type="submit" disabled={promoLoading}>
-                    {promoLoading ? "Applying..." : "Apply"}
-                  </Button>
-                </form>
-                {promoError && <div className="text-sm text-red-400">{promoError}</div>}
-              </div>
-            )}
+            <div className="flex flex-col gap-3">
+              {appliedCoupons.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {appliedCoupons.map((coupon) => (
+                    <PromoCodeCard
+                      key={coupon.code}
+                      code={coupon.code}
+                      description={coupon.description}
+                      discountLabel={formatDiscount(coupon.discountAmount)}
+                      onRemove={() => {
+                        setAppliedCoupons((prev) => prev.filter((item) => item.code !== coupon.code));
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : null}
+              {appliedCoupons.length < 2 ? (
+                <div className="flex flex-col gap-2">
+                  <form className="flex items-center gap-2" onSubmit={handleApplyCoupon}>
+                    <Input
+                      placeholder="Enter promo code"
+                      value={promoCode}
+                      onChange={(event) => setPromoCode(event.target.value)}
+                    />
+                    <Button variant="primary" size="lg" type="submit" disabled={promoLoading}>
+                      {promoLoading ? "Applying..." : "Apply"}
+                    </Button>
+                  </form>
+                  <div className="text-xs text-white/50">Stack up to 2 compatible promo codes.</div>
+                </div>
+              ) : (
+                <div className="text-xs text-white/50">Two promo codes applied.</div>
+              )}
+              {promoError && <div className="text-sm text-red-400">{promoError}</div>}
+            </div>
 
             <Separator className="bg-white/0" />
 

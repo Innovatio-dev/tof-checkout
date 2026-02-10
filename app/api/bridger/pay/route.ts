@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { debugError, debugLog } from "@/lib/debug"
 import { getProductById, getProductVariationById, updateOrder } from "@/lib/woocommerce"
 import { validateCoupon } from "@/lib/discounts"
+import { canStackCoupons, type StackableCoupon } from "@/lib/coupon-stacking"
 
 interface AuthResponse {
     token: string
@@ -34,7 +35,7 @@ interface BodyPayload {
     zipCode: string
     wooProductId: number
     wooVariantId?: number
-    couponCode?: string | null
+    couponCodes?: string[] | null
 }
 
 export async function POST(request: NextRequest) {
@@ -74,20 +75,53 @@ export async function POST(request: NextRequest) {
     const baseTotal = unitPrice * sanitizedQuantity
     let totalAmount = baseTotal
 
-    if (body.couponCode) {
-        const validation = await validateCoupon({
-            code: body.couponCode,
-            email: body.email,
-            productId: body.wooProductId,
-            total: baseTotal,
-        })
+    const rawCouponCodes = Array.isArray(body.couponCodes)
+        ? body.couponCodes
+        : typeof body.couponCodes === "string"
+            ? [body.couponCodes]
+            : []
+    const couponCodes = rawCouponCodes.map((code) => code.trim()).filter(Boolean).slice(0, 2)
 
-        if (!validation.valid) {
-            debugLog("[DEBUG::Pay] Invalid coupon", { reason: validation.reason })
-            return NextResponse.json({ error: validation.reason || "Invalid coupon" }, { status: 400 })
+    if (couponCodes.length) {
+        const appliedCoupons: StackableCoupon[] = []
+        let runningTotal = baseTotal
+
+        for (const code of couponCodes) {
+            const validation = await validateCoupon({
+                code,
+                email: body.email,
+                productId: body.wooProductId,
+                total: runningTotal,
+            })
+
+            if (!validation.valid || !validation.coupon) {
+                debugLog("[DEBUG::Pay] Invalid coupon", { reason: validation.reason })
+                return NextResponse.json({ error: validation.reason || "Invalid coupon" }, { status: 400 })
+            }
+
+            const stackCheck = canStackCoupons(appliedCoupons, {
+                code: validation.coupon.code,
+                individual_use: validation.coupon.individual_use,
+                product_categories: validation.coupon.product_categories ?? null,
+                excluded_product_categories: validation.coupon.excluded_product_categories ?? null,
+                excluded_coupons_categories_ids: validation.coupon.excluded_coupons_categories_ids ?? null,
+            })
+
+            if (!stackCheck.allowed) {
+                return NextResponse.json({ error: stackCheck.reason || "Coupons cannot be stacked" }, { status: 400 })
+            }
+
+            appliedCoupons.push({
+                code: validation.coupon.code,
+                individual_use: validation.coupon.individual_use,
+                product_categories: validation.coupon.product_categories ?? null,
+                excluded_product_categories: validation.coupon.excluded_product_categories ?? null,
+                excluded_coupons_categories_ids: validation.coupon.excluded_coupons_categories_ids ?? null,
+            })
+            runningTotal = validation.totalAfterDiscount
         }
 
-        totalAmount = validation.totalAfterDiscount
+        totalAmount = runningTotal
     }
 
     if (totalAmount <= 0) {
