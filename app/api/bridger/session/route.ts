@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
             city: city,
             state: state,
             zip_code: zipCode,
-            button_text: 'Pay'
+            button_text: 'Pay',
+            deposit_button_text: 'Pay'
         })
     }
 
