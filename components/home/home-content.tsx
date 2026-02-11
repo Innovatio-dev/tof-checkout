@@ -74,15 +74,15 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [promoLoading, setPromoLoading] = useState(false);
   const [appliedCoupons, setAppliedCoupons] = useState<
     Array<{
+      id: number;
       code: string;
       description?: string;
       discountAmount: number;
       discountType?: string;
       amount?: string;
       individual_use?: boolean;
-      product_categories?: number[] | null;
-      excluded_product_categories?: number[] | null;
-      excluded_coupons_categories_ids?: number[] | null;
+      coupon_categories?: Array<{ slug: string }> | null;
+      meta_data?: Array<{ key: string; value: unknown }> | null;
     }>
   >([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -330,14 +330,14 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
         discountAmount?: number;
         totalAfterDiscount?: number;
         coupon?: {
+          id: number;
           code: string;
           description?: string;
           discount_type?: string;
           amount?: string;
           individual_use?: boolean;
-          product_categories?: number[] | null;
-          excluded_product_categories?: number[] | null;
-          excluded_coupons_categories_ids?: number[] | null;
+          coupon_categories?: Array<{ slug: string }> | null;
+          meta_data?: Array<{ key: string; value: unknown }> | null;
         } | null;
         error?: string;
       };
@@ -352,29 +352,35 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       }
 
       const stackCheck = canStackCoupons(appliedCoupons, {
+        id: data.coupon.id,
         code: data.coupon.code,
         individual_use: data.coupon.individual_use,
-        product_categories: data.coupon.product_categories,
-        excluded_product_categories: data.coupon.excluded_product_categories,
-        excluded_coupons_categories_ids: data.coupon.excluded_coupons_categories_ids,
+        coupon_categories: data.coupon.coupon_categories ?? null,
+        meta_data: data.coupon.meta_data ?? null,
       });
 
       if (!stackCheck.allowed) {
-        setPromoError(stackCheck.reason ?? "This promo code cannot be combined.");
+        const trimmedCode = data.coupon.code.trim().toUpperCase();
+        const conflictCode = stackCheck.conflictCode?.trim().toUpperCase();
+        if (conflictCode) {
+          setPromoError(`Promo code ${trimmedCode} can’t be stacked with ${conflictCode}.`);
+        } else {
+          setPromoError(stackCheck.reason ?? "This promo code cannot be combined.");
+        }
         return;
       }
 
       setAppliedCoupons((prev) =>
         [...prev, {
+          id: data.coupon!.id,
           code: data.coupon!.code,
           description: data.coupon!.description,
           discountType: data.coupon!.discount_type,
           amount: data.coupon!.amount,
           discountAmount: data.discountAmount ?? 0,
           individual_use: data.coupon!.individual_use,
-          product_categories: data.coupon!.product_categories ?? null,
-          excluded_product_categories: data.coupon!.excluded_product_categories ?? null,
-          excluded_coupons_categories_ids: data.coupon!.excluded_coupons_categories_ids ?? null,
+          coupon_categories: data.coupon!.coupon_categories ?? null,
+          meta_data: data.coupon!.meta_data ?? null,
         }].slice(0, 2)
       );
       setPromoCode("");
@@ -1069,12 +1075,14 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
                       {promoLoading ? "Applying..." : "Apply"}
                     </Button>
                   </form>
-                  <div className="text-xs text-white/50">Stack up to 2 compatible promo codes.</div>
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="text-xs text-white/50">Stack up to 2 compatible promo codes.</div>
+                    {promoError && <div className="text-xs text-red-400 text-right">{promoError}</div>}
+                  </div>
                 </div>
               ) : (
                 <div className="text-xs text-white/50">Two promo codes applied.</div>
               )}
-              {promoError && <div className="text-sm text-red-400">{promoError}</div>}
             </div>
 
             <Separator className="bg-white/0" />

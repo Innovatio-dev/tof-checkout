@@ -87,11 +87,12 @@ export type WooCouponDetail = {
   limit_usage_to_x_items?: number | null;
   product_categories?: number[];
   excluded_product_categories?: number[];
-  excluded_coupons_categories_ids?: number[] | null;
   exclude_sale_items?: boolean;
   minimum_amount?: string;
   maximum_amount?: string;
   email_restrictions?: string[];
+  meta_data?: Array<{ key: string; value: unknown }>;
+  coupon_categories?: WooCouponCategory[] | null;
 };
 
 export type WooCouponQuery = {
@@ -100,6 +101,13 @@ export type WooCouponQuery = {
   code?: string;
   status?: string;
   search?: string;
+};
+
+export type WooCouponCategory = {
+  id: number;
+  count: number;
+  name: string;
+  slug: string;
 };
 
 export type WooCustomer = {
@@ -222,7 +230,43 @@ export const getProductVariationById = async (productId: number, variationId: nu
 export const getCoupons = async (query?: WooCouponQuery) => {
   const api = getWooCommerceApi();
   const response = await api.get("coupons", query);
-  return response.data as WooCoupon[];
+  return response.data as WooCouponDetail[];
+};
+
+export const getCouponCategoriesById = async (couponId: number) => {
+  if (!siteUrl) {
+    throw new Error("WP_SITE_URL is not set");
+  }
+
+  const response = await fetch(
+    `${siteUrl}/wp-json/wp/v2/shop_coupon_cat?post=${couponId}&per_page=100`
+  );
+  if (!response.ok) {
+    const rawBody = await response.text().catch(() => "");
+    console.error("[wp/shop_coupon_cat] non-ok response", {
+      status: response.status,
+      statusText: response.statusText,
+      body: rawBody,
+    });
+    return [] as WooCouponCategory[];
+  }
+
+  const data = (await response.json()) as Array<{
+    id: number;
+    count: number;
+    name: string;
+    slug: string;
+  }>;
+  if (!Array.isArray(data)) {
+    return [] as WooCouponCategory[];
+  }
+
+  return data.map((item) => ({
+    id: item.id,
+    count: item.count,
+    name: item.name,
+    slug: item.slug,
+  }));
 };
 
 export const getAllCoupons = async ({
@@ -236,7 +280,7 @@ export const getAllCoupons = async ({
   status?: string;
   search?: string;
 } = {}) => {
-  const coupons: WooCoupon[] = [];
+  const coupons: WooCouponDetail[] = [];
   let page = 1;
 
   while (page <= maxPages) {
@@ -264,6 +308,8 @@ export const getCouponByCode = async (code: string) => {
     return null;
   }
 
+  const couponCategories = await getCouponCategoriesById(coupon.id);
+
   return {
     id: coupon.id,
     code: coupon.code,
@@ -286,12 +332,12 @@ export const getCouponByCode = async (code: string) => {
     limit_usage_to_x_items: coupon.limit_usage_to_x_items,
     product_categories: coupon.product_categories,
     excluded_product_categories: coupon.excluded_product_categories,
-    excluded_coupons_categories_ids: (coupon as { excluded_coupons_categories_ids?: number[] | null })
-      .excluded_coupons_categories_ids,
     exclude_sale_items: coupon.exclude_sale_items,
     minimum_amount: coupon.minimum_amount,
     maximum_amount: coupon.maximum_amount,
     email_restrictions: coupon.email_restrictions,
+    meta_data: coupon.meta_data as Array<{ key: string; value: unknown }> | undefined,
+    coupon_categories: couponCategories,
   };
 };
 

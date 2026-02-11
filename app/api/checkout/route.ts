@@ -185,11 +185,11 @@ export async function POST(request: NextRequest) {
       }
 
       const stackCheck = canStackCoupons(appliedCoupons, {
+        id: validation.coupon.id,
         code: validation.coupon.code,
         individual_use: validation.coupon.individual_use,
-        product_categories: validation.coupon.product_categories ?? null,
-        excluded_product_categories: validation.coupon.excluded_product_categories ?? null,
-        excluded_coupons_categories_ids: validation.coupon.excluded_coupons_categories_ids ?? null,
+        coupon_categories: validation.coupon.coupon_categories ?? null,
+        meta_data: validation.coupon.meta_data ?? null,
       });
 
       if (!stackCheck.allowed) {
@@ -197,11 +197,11 @@ export async function POST(request: NextRequest) {
       }
 
       appliedCoupons.push({
+        id: validation.coupon.id,
         code: validation.coupon.code,
         individual_use: validation.coupon.individual_use,
-        product_categories: validation.coupon.product_categories ?? null,
-        excluded_product_categories: validation.coupon.excluded_product_categories ?? null,
-        excluded_coupons_categories_ids: validation.coupon.excluded_coupons_categories_ids ?? null,
+        coupon_categories: validation.coupon.coupon_categories ?? null,
+        meta_data: validation.coupon.meta_data ?? null,
       });
       runningTotal = validation.totalAfterDiscount;
     }
