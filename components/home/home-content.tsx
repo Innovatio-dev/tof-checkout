@@ -120,6 +120,10 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     }).format(price);
   }, [price]);
 
+  const isMonthlyPayment = useMemo(() => {
+    return recurrence?.toLowerCase() === "monthly";
+  }, [recurrence]);
+
   useEffect(() => {
     if (storedEmail && !email) {
       setEmail(storedEmail)
@@ -523,7 +527,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       return
     }
 
-    if (!skipAuthCheck && !isAuthenticated) {
+    if (!skipAuthCheck && !isAuthenticated && isMonthlyPayment) {
       openLoginModal(() => {
         handleSubmit(true)
       })
