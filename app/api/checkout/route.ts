@@ -7,10 +7,10 @@ import {
   updateCustomer,
   type CreateOrderPayload,
 } from "@/lib/woocommerce";
-import { validateCoupon } from "@/lib/discounts";
+import { validateCoupon } from "@/lib/topone/discounts";
 import { getProductById, getProductVariationById } from "@/lib/woocommerce";
 import { SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
-import { canStackCoupons, type StackableCoupon } from "@/lib/coupon-stacking";
+import { canStackCoupons, type StackableCoupon } from "@/lib/topone/coupon-stacking";
 
 type CheckoutPayload = {
   email?: string;

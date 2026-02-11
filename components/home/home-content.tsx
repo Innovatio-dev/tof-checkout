@@ -29,7 +29,7 @@ import { useShallow } from "zustand/react/shallow";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { useLoginModalStore } from "@/components/custom/login-modal";
 import ConfirmActionDialog from "@/components/custom/confirm-action-dialog";
-import { canStackCoupons } from "@/lib/coupon-stacking";
+import { canStackCoupons } from "@/lib/topone/coupon-stacking";
 
 type HomeContentProps = {
   isAuthenticated?: boolean

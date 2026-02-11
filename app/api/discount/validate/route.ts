@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { validateCoupon } from "@/lib/discounts";
+import { validateCoupon } from "@/lib/topone/discounts";
 
 export async function POST(request: NextRequest) {
   const payload = (await request.json().catch(() => null)) as {

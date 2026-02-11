@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { debugError, debugLog } from "@/lib/debug"
 import { getProductById, getProductVariationById, updateOrder } from "@/lib/woocommerce"
-import { validateCoupon } from "@/lib/discounts"
-import { canStackCoupons, type StackableCoupon } from "@/lib/coupon-stacking"
+import { validateCoupon } from "@/lib/topone/discounts"
+import { canStackCoupons, type StackableCoupon } from "@/lib/topone/coupon-stacking"
 
 interface AuthResponse {
     token: string
