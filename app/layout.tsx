@@ -5,6 +5,7 @@ import Image from "next/image";
 import HeaderWrapper from "@/components/custom/header-wrapper";
 import Footer from "@/components/custom/footer";
 import LoginModal from "@/components/custom/login-modal";
+import HyrosScript from "@/lib/topone/hyros-script";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body className={`${poppins.variable} antialiased bg-dark relative min-h-screen`}>
+        <HyrosScript />
         <div className="absolute top-0 left-1/2 transform -translate-1/2 w-full">
           <Image src="/images/tof-dots.png" alt="Logo" width={1144} height={546} className="bg-transparent w-full" />
         </div>
