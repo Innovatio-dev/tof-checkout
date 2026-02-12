@@ -165,6 +165,7 @@ export type WooOrder = {
   billing?: {
     email?: string;
   };
+  meta_data?: Array<{ key?: string; value?: unknown }>;
   line_items?: Array<{
     id: number;
     name: string;
@@ -590,9 +591,14 @@ export type CreateOrderPayload = {
 };
 
 export const createOrder = async (payload: CreateOrderPayload) => {
-  const api = getWooCommerceApi();
-  const response = await api.post("orders", payload);
-  return response.data as WooOrder;
+  try {
+    const api = getWooCommerceApi();
+    const response = await api.post("orders", payload);
+    return response.data as WooOrder;
+  } catch (error) {
+    console.error("[WPDEBUG] createOrder error", error?.response?.data ?? error);
+    throw error;
+  }
 };
 
 export type UpdateOrderPayload = {

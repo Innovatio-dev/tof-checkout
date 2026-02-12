@@ -4,12 +4,13 @@ import {
   createCustomer,
   createOrder,
   getCustomersByEmail,
+  updateOrder,
   updateCustomer,
   type CreateOrderPayload,
 } from "@/lib/woocommerce";
 import { validateCoupon } from "@/lib/topone/discounts";
 import { getProductById, getProductVariationById } from "@/lib/woocommerce";
-import { SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
+import { createOrderAccessToken, SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
 import { canStackCoupons, type StackableCoupon } from "@/lib/topone/coupon-stacking";
 
 type CheckoutPayload = {
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
       {
         product_id: productId,
         variation_id: payload.wooVariantId ?? undefined,
-        quantity: sanitizedQuantity,
+        quantity: 1,
       },
     ],
     billing: {
@@ -211,7 +212,33 @@ export async function POST(request: NextRequest) {
 
   // TODO: add the Gateway payment integration.
 
-  const order = await createOrder(orderPayload);
+  const orderIds: number[] = [];
+  try {
+    for (let index = 0; index < sanitizedQuantity; index += 1) {
+      const order = await createOrder(orderPayload);
+      orderIds.push(order.id);
+    }
+  } catch (error) {
+    const message =
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      (error instanceof Error ? error.message : null) ??
+      "Failed to place order.";
+    const decodedMessage = message
+      .replace(/&quot;/g, "\"")
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .trim();
+    return NextResponse.json({ error: decodedMessage }, { status: 400 });
+  }
 
-  return NextResponse.json({ orderId: order.id });
+  if (orderIds.length > 1) {
+    await updateOrder(orderIds[0], {
+      meta_data: [{ key: "bridgerpay_order_ids", value: orderIds.join(",") }],
+    });
+  }
+
+  const orderAccessToken = await createOrderAccessToken({ orderIds, email });
+  return NextResponse.json({ orderId: orderIds[0], orderIds, orderAccessToken });
 }

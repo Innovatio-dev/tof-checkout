@@ -22,6 +22,7 @@ export interface PayResponse {
 
 interface BodyPayload {
     orderId: string
+    orderIds?: number[]
     country: string
     quantity: number
     firstName: string
@@ -125,19 +126,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (totalAmount <= 0) {
-        debugLog("[DEBUG::Pay] Zero total detected, completing order", { orderId: body.orderId })
+        debugLog("[DEBUG::Pay] Zero total detected, completing order", { orderId: body.orderId, orderIds: body.orderIds })
         const orderId = Number(body.orderId)
 
         if (!Number.isFinite(orderId)) {
             return NextResponse.json({ error: "Invalid order ID." }, { status: 400 })
         }
 
-        await updateOrder(orderId, {
-            status: "completed",
-            set_paid: true,
-            payment_method: "coupon",
-            payment_method_title: "Coupon",
-        })
+        const targetOrderIds = Array.isArray(body.orderIds) && body.orderIds.length
+            ? body.orderIds
+            : [orderId]
+
+        await Promise.all(
+            targetOrderIds.map((id) => updateOrder(id, {
+                status: "completed",
+                set_paid: true,
+                payment_method: "coupon",
+                payment_method_title: "Coupon",
+            }))
+        )
         await new Promise((resolve) => setTimeout(resolve, 500))
 
         return NextResponse.json({ cashierKey: "", cashierToken: "", skipPayment: true })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { updateOrder } from "@/lib/woocommerce";
+import { getOrderById, updateOrder } from "@/lib/woocommerce";
 
 /**
  * Maps:
@@ -79,8 +79,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Update the order in WooCommerce
-    const updatedOrder = await updateOrder(orderId, {
+    const primaryOrder = await getOrderById(orderId);
+    const orderIdMeta = primaryOrder.meta_data?.find(
+      (item: { key?: string; value?: unknown } | undefined) =>
+        typeof item?.key === "string" && item.key === "bridgerpay_order_ids"
+    );
+    const relatedOrderIds = String(orderIdMeta?.value ?? "")
+      .split(",")
+      .map((value) => Number(value.trim()))
+      .filter((value) => Number.isFinite(value));
+    const targetOrderIds = relatedOrderIds.length ? relatedOrderIds : [orderId];
+
+    const updatePayload = {
       status: mappedStatus.status,
       set_paid: mappedStatus.setPaid,
       payment_method: payload.data?.psp_name,
@@ -91,9 +101,13 @@ export async function POST(request: NextRequest) {
         { key: "bridgerpay_charge_uuid", value: payload.data?.charge?.uuid ?? null },
         { key: "bridgerpay_psp", value: payload.data?.psp_name ?? null },
       ],
-    });
+    };
 
-    return NextResponse.json({ received: true, order: updatedOrder });
+    const updatedOrders = await Promise.all(
+      targetOrderIds.map((id) => updateOrder(id, updatePayload))
+    );
+
+    return NextResponse.json({ received: true, orders: updatedOrders });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update order.";
     return NextResponse.json({ error: message }, { status: 500 });

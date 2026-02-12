@@ -10,6 +10,7 @@ const getAuthSecret = () => {
 };
 
 const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 const toBase64Url = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer);
@@ -19,6 +20,8 @@ const toBase64Url = (buffer: ArrayBuffer) => {
   });
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 };
+
+const encodeText = (value: string) => toBase64Url(encoder.encode(value).buffer);
 
 const fromBase64Url = (value: string) => {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -30,6 +33,8 @@ const fromBase64Url = (value: string) => {
   }
   return bytes;
 };
+
+const decodeText = (value: string) => decoder.decode(fromBase64Url(value));
 
 const importKey = async () => {
   const secret = getAuthSecret();
@@ -47,11 +52,47 @@ const verifySignature = async (payload: string, signature: string) => {
   return crypto.subtle.verify("HMAC", key, fromBase64Url(signature), encoder.encode(payload));
 };
 
+type OrderAccessPayload = {
+  orderIds: number[];
+  email: string;
+};
+
 export const createSessionCookie = async (email: string) => {
   const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
   const payload = `${email}|${expiresAt}`;
   const signature = await signPayload(payload);
   return `${payload}|${signature}`;
+};
+
+export const createOrderAccessToken = async ({ orderIds, email }: OrderAccessPayload) => {
+  const normalizedEmail = email.trim().toLowerCase();
+  const payload = JSON.stringify({ orderIds, email: normalizedEmail });
+  const encodedPayload = encodeText(payload);
+  const signature = await signPayload(encodedPayload);
+  return `${encodedPayload}.${signature}`;
+};
+
+export const verifyOrderAccessToken = async (token: string) => {
+  const [encodedPayload, signature] = token.split(".");
+  if (!encodedPayload || !signature) {
+    return { valid: false } as const;
+  }
+
+  const isValid = await verifySignature(encodedPayload, signature);
+  if (!isValid) {
+    return { valid: false } as const;
+  }
+
+  try {
+    const decoded = decodeText(encodedPayload);
+    const data = JSON.parse(decoded) as OrderAccessPayload;
+    if (!Array.isArray(data.orderIds) || !data.orderIds.length || !data.email) {
+      return { valid: false } as const;
+    }
+    return { valid: true, orderIds: data.orderIds, email: data.email } as const;
+  } catch {
+    return { valid: false } as const;
+  }
 };
 
 export const verifySessionCookie = async (cookieValue: string | undefined | null) => {

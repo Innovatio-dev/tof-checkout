@@ -36,6 +36,8 @@ const formatDate = (value: string | null) => {
 
 const ThankYouContent = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderIds, setOrderIds] = useState<number[]>([]);
+  const [orderAccessToken, setOrderAccessToken] = useState<string | null>(null);
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [order, setOrder] = useState<{
@@ -49,7 +51,21 @@ const ThankYouContent = () => {
   } | null>(null);
 
   useEffect(() => {
-    setOrderId(sessionStorage.getItem("tof_order_id"));
+    const storedOrderId = sessionStorage.getItem("tof_order_id");
+    const storedOrderIds = sessionStorage.getItem("tof_order_ids");
+    const storedOrderAccessToken = sessionStorage.getItem("tof_order_access_token");
+    setOrderId(storedOrderId);
+    setOrderAccessToken(storedOrderAccessToken);
+    if (storedOrderIds) {
+      try {
+        const parsedIds = JSON.parse(storedOrderIds) as number[];
+        if (Array.isArray(parsedIds)) {
+          setOrderIds(parsedIds.filter((id) => Number.isFinite(id)));
+        }
+      } catch {
+        setOrderIds([]);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -66,7 +82,7 @@ const ThankYouContent = () => {
         const response = await fetch("/api/order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId }),
+          body: JSON.stringify({ orderId, orderAccessToken }),
         });
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -94,9 +110,10 @@ const ThankYouContent = () => {
     return () => {
       isMounted = false;
     };
-  }, [orderId]);
+  }, [orderAccessToken, orderId]);
 
   const orderNumber = order?.id ? `${order?.id}` : orderId ?? "—";
+  const orderNumbers = orderIds.length ? orderIds.map((id) => `#${id}`).join(", ") : null;
   const email = order?.billing?.email ?? "—";
   const total = order?.total ? `$${order.total}` : "—";
   const paymentMethod = order?.payment_method_title ?? "—";
@@ -106,7 +123,10 @@ const ThankYouContent = () => {
   );
 
   const overviewItems = [
-    { label: "Order number", value: `#${orderNumber}` },
+    {
+      label: orderIds.length > 1 ? "Order numbers" : "Order number",
+      value: orderNumbers ?? `#${orderNumber}`,
+    },
     { label: "Date", value: orderDate },
     { label: "Email", value: email },
     { label: "Total", value: total },

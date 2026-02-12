@@ -563,26 +563,42 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
         }),
       })
 
+      const wooData = (await wooresponse
+        .json()
+        .catch(() => ({}))) as {
+        error?: string
+        orderId?: number
+        orderIds?: number[]
+        orderAccessToken?: string
+      }
       if (!wooresponse.ok) {
-        const data = (await wooresponse.json()) as { error?: string }
-        throw new Error(data.error ?? "Failed to place order.")
+        throw new Error(wooData.error ?? "Failed to place order.")
       }
 
       // Get the order ID from the response
-      const wooData = (await wooresponse.json()) as { orderId?: number }
-      if (!wooData.orderId) {
+      const orderIds = Array.isArray(wooData.orderIds) && wooData.orderIds.length
+        ? wooData.orderIds
+        : wooData.orderId
+          ? [wooData.orderId]
+          : []
+      if (!orderIds.length) {
         throw new Error("Order created, but no order ID was returned.")
       }
 
       // Store the order ID in sessionStorage
-      sessionStorage.setItem("tof_order_id", String(wooData.orderId))
+      sessionStorage.setItem("tof_order_id", String(orderIds[0]))
+      sessionStorage.setItem("tof_order_ids", JSON.stringify(orderIds))
+      if (wooData.orderAccessToken) {
+        sessionStorage.setItem("tof_order_access_token", wooData.orderAccessToken)
+      }
 
       // Start payment process with Bridger Pay
       const bridgerResponse = await fetch("/api/bridger/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderId: String(wooData.orderId),
+          orderId: String(orderIds[0]),
+          orderIds,
           country: countryCode,
           quantity,
           firstName,
