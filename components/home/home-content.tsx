@@ -30,6 +30,7 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import { useLoginModalStore } from "@/components/custom/login-modal";
 import ConfirmActionDialog from "@/components/custom/confirm-action-dialog";
 import { canStackCoupons } from "@/lib/topone/coupon-stacking";
+import { initBridgerPayDisclaimerListener } from "@/lib/topone/bridger-disclaimer";
 
 type HomeContentProps = {
   isAuthenticated?: boolean
@@ -260,6 +261,15 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
       script.referrerPolicy = "no-referrer"
       document.body.appendChild(script)
     }
+  }, [paymentModalOpen])
+
+  /* MARK: Bridger Pay Disclaimer */
+  useEffect(() => {
+    if (!paymentModalOpen) {
+      return
+    }
+
+    return initBridgerPayDisclaimerListener()
   }, [paymentModalOpen])
 
   const handleIframeLoad = () => {
