@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,7 @@ const ThankYouContent = () => {
     billing?: { email?: string };
     line_items?: Array<{ id: number; name: string; quantity: number; total: string }>;
   } | null>(null);
+  const hasTrackedConversion = useRef(false);
 
   useEffect(() => {
     const storedOrderId = sessionStorage.getItem("tof_order_id");
@@ -111,6 +112,25 @@ const ThankYouContent = () => {
       isMounted = false;
     };
   }, [orderAccessToken, orderId]);
+
+  {/* MARK: Convert Experiments — Conversion Tracking */}
+  useEffect(() => {
+    if (!order || hasTrackedConversion.current) {
+      return;
+    }
+
+    const total = Number(order.total);
+    if (!Number.isFinite(total)) {
+      return;
+    }
+
+    const quantity = (order.line_items ?? []).reduce((sum, item) => sum + (item.quantity ?? 0), 0) || 1;
+    const queue = (window as Window & { _conv_q?: Array<unknown> })._conv_q ?? [];
+
+    queue.push(["pushRevenue", total, quantity, "undefined"]);
+    (window as Window & { _conv_q?: Array<unknown> })._conv_q = queue;
+    hasTrackedConversion.current = true;
+  }, [order]);
 
   const orderNumber = order?.id ? `${order?.id}` : orderId ?? "—";
   const orderNumbers = orderIds.length ? orderIds.map((id) => `#${id}`).join(", ") : null;

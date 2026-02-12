@@ -30,13 +30,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const convertAccountId = "10047892"
+  const convertExperimentId = "100417614"
   return (
     <html lang="en">
+      <head>
+        <script
+          type="text/javascript"
+          src={`//cdn-4.convertexperiments.com/v1/js/${convertAccountId}-${convertExperimentId}.js?environment=production`}
+        />
+      </head>
       <body className={`${poppins.variable} antialiased bg-dark relative min-h-screen`}>
         <div className="absolute top-0 left-1/2 transform -translate-1/2 w-full">
           <Image src="/images/tof-dots.png" alt="Logo" width={1144} height={546} className="bg-transparent w-full" />
