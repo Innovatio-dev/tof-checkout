@@ -9,6 +9,13 @@ export type StackableCoupon = {
 const normalizeStringSet = (values: Array<string | number> = []) =>
   new Set(values.map((value) => String(value).trim().toLowerCase()).filter(Boolean));
 
+const stackablePrefixes = ["playbook", "myst-"];
+
+const isStackablePrefixCoupon = (coupon: StackableCoupon) => {
+  const normalized = coupon.code.trim().toLowerCase();
+  return stackablePrefixes.some((prefix) => normalized.startsWith(prefix));
+};
+
 const extractExcludedCoupons = (coupon: StackableCoupon) => {
   const metaEntries = coupon.meta_data ?? [];
   const entry = metaEntries.find((item) => item.key === "_acfw_excluded_coupons");
@@ -38,8 +45,14 @@ const extractExcludedCoupons = (coupon: StackableCoupon) => {
   return { excludedCouponIds, excludedCategorySlugs };
 };
 
-const getCouponCategorySlugs = (coupon: StackableCoupon) =>
-  normalizeStringSet((coupon.coupon_categories ?? []).map((category) => category.slug));
+const getCouponCategorySlugs = (coupon: StackableCoupon) => {
+  const slugs = normalizeStringSet((coupon.coupon_categories ?? []).map((category) => category.slug));
+  // If the coupon is a prefixed stackable coupon, add the "stackable" slug
+  if (isStackablePrefixCoupon(coupon)) {
+    slugs.add("stackable");
+  }
+  return slugs;
+};
 
 const hasMutuallyExclusiveCategory = (a: Set<string>, b: Set<string>) => {
   const hasAffiliate = a.has("affiliate") || b.has("affiliate");
@@ -52,7 +65,7 @@ export const canStackCoupons = (existingCoupons: StackableCoupon[], nextCoupon: 
     return { allowed: true };
   }
 
-  if (nextCoupon.individual_use) {
+  if (nextCoupon.individual_use && !isStackablePrefixCoupon(nextCoupon)) {
     return { allowed: false, reason: "This coupon cannot be combined with other offers." };
   }
 
@@ -60,7 +73,8 @@ export const canStackCoupons = (existingCoupons: StackableCoupon[], nextCoupon: 
   const nextCategorySlugs = getCouponCategorySlugs(nextCoupon);
 
   for (const existing of existingCoupons) {
-    if (existing.individual_use) {
+    // If the coupon is a prefixed stackable coupon, it can be stacked with other coupons
+    if (existing.individual_use && !isStackablePrefixCoupon(existing)) {
       return { allowed: false, reason: "This coupon cannot be combined with other offers.", conflictCode: existing.code };
     }
 
@@ -70,6 +84,14 @@ export const canStackCoupons = (existingCoupons: StackableCoupon[], nextCoupon: 
 
     const existingExcluded = extractExcludedCoupons(existing);
     const existingCategorySlugs = getCouponCategorySlugs(existing);
+
+    if (existingCategorySlugs.has("stackable") && nextCategorySlugs.has("stackable")) {
+      return {
+        allowed: false,
+        reason: "This promo code can’t be stacked with one already applied.",
+        conflictCode: existing.code,
+      };
+    }
 
     if (hasMutuallyExclusiveCategory(existingCategorySlugs, nextCategorySlugs)) {
       return {
