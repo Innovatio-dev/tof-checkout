@@ -13,6 +13,7 @@ import { getProductById, getProductVariationById } from "@/lib/woocommerce";
 import { createOrderAccessToken, SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
 import { canStackCoupons, type StackableCoupon } from "@/lib/topone/coupon-stacking";
 import { validateSeonFraud } from "@/lib/topone/seon";
+import { syncActiveCampaignContact } from "@/lib/topone/activecampaign";
 
 type CheckoutPayload = {
   email?: string;
@@ -133,6 +134,20 @@ export async function POST(request: NextRequest) {
   if (!unitPrice || !Number.isFinite(unitPrice)) {
     return NextResponse.json({ error: "Invalid product pricing." }, { status: 400 });
   }
+
+  await syncActiveCampaignContact({
+    email,
+    firstName: payload.firstName ?? "",
+    lastName: payload.lastName ?? "",
+    phone: `+${payload.phoneCode}${payload.phoneNumber}`,
+    customFields: {
+      billingCountry: payload.countryCode,
+      billingAddress: payload.address1,
+      billingCity: payload.city,
+      billingState: payload.state,
+      billingPostcode: payload.postcode,
+    },
+  });
 
   const fraudCheck = await validateSeonFraud({
     email,

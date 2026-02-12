@@ -147,7 +147,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     }
   }, [email, firstName, lastName, storedEmail, storedFirstName, storedLastName])
 
-  {/* MARK: SEON */}
+  // MARK: SEON
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_SEON_ENABLED !== "true") {
       return
@@ -179,7 +179,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     document.body.appendChild(script)
   }, [])
 
-  {/* MARK: User/Order details */}
+  // MARK: User/Order details
   useEffect(() => {
     if (!isAuthenticated) {
       return
