@@ -591,14 +591,9 @@ export type CreateOrderPayload = {
 };
 
 export const createOrder = async (payload: CreateOrderPayload) => {
-  try {
-    const api = getWooCommerceApi();
-    const response = await api.post("orders", payload);
-    return response.data as WooOrder;
-  } catch (error) {
-    console.error("[WPDEBUG] createOrder error", error?.response?.data ?? error);
-    throw error;
-  }
+  const api = getWooCommerceApi();
+  const response = await api.post("orders", payload);
+  return response.data as WooOrder;
 };
 
 export type UpdateOrderPayload = {
