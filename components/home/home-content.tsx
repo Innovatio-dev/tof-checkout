@@ -32,6 +32,15 @@ import ConfirmActionDialog from "@/components/custom/confirm-action-dialog";
 import { canStackCoupons } from "@/lib/topone/coupon-stacking";
 import { initBridgerPayDisclaimerListener } from "@/lib/topone/bridger-disclaimer";
 
+declare global {
+  interface Window {
+    seon?: {
+      init: () => void;
+      getSession: () => Promise<string>;
+    };
+  }
+}
+
 type HomeContentProps = {
   isAuthenticated?: boolean
 }
@@ -90,6 +99,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [paymentData, setPaymentData] = useState<{ cashierKey: string; cashierToken: string } | null>(null);
+  const [seonSession, setSeonSession] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const { email: storedEmail, firstName: storedFirstName, lastName: storedLastName } = useUserStore(
     useShallow((state) => ({
@@ -137,6 +147,39 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
     }
   }, [email, firstName, lastName, storedEmail, storedFirstName, storedLastName])
 
+  {/* MARK: SEON */}
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_SEON_ENABLED !== "true") {
+      return
+    }
+
+    const scriptId = "seon-sdk"
+    const loadSeonSession = () => {
+      if (!window.seon) {
+        return
+      }
+      try {
+        window.seon.init()
+        window.seon.getSession().then(setSeonSession).catch(() => {})
+      } catch {
+        // ignore errors; keep checkout running
+      }
+    }
+
+    if (document.getElementById(scriptId)) {
+      loadSeonSession()
+      return
+    }
+
+    const script = document.createElement("script")
+    script.id = scriptId
+    script.src = "https://cdn.seonintelligence.com/js/v6/agent.umd.js"
+    script.async = true
+    script.onload = loadSeonSession
+    document.body.appendChild(script)
+  }, [])
+
+  {/* MARK: User/Order details */}
   useEffect(() => {
     if (!isAuthenticated) {
       return
@@ -570,6 +613,7 @@ export default function HomeContent({ isAuthenticated = false }: HomeContentProp
           wooProductId,
           wooVariantId,
           couponCodes: appliedCoupons.map((coupon) => coupon.code),
+          seonSession,
         }),
       })
 

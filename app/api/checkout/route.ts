@@ -12,6 +12,7 @@ import { validateCoupon } from "@/lib/topone/discounts";
 import { getProductById, getProductVariationById } from "@/lib/woocommerce";
 import { createOrderAccessToken, SESSION_COOKIE_NAME, verifySessionCookie } from "@/lib/auth";
 import { canStackCoupons, type StackableCoupon } from "@/lib/topone/coupon-stacking";
+import { validateSeonFraud } from "@/lib/topone/seon";
 
 type CheckoutPayload = {
   email?: string;
@@ -33,6 +34,7 @@ type CheckoutPayload = {
   wooProductId?: number | null;
   wooVariantId?: number | null;
   couponCodes?: string[] | null;
+  seonSession?: string | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -75,6 +77,8 @@ export async function POST(request: NextRequest) {
   const existingCustomers = await getCustomersByEmail(email);
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = await verifySessionCookie(sessionCookie);
+  const clientIp =
+    request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const customerPayload = {
     email,
     first_name: payload.firstName,
@@ -128,6 +132,19 @@ export async function POST(request: NextRequest) {
 
   if (!unitPrice || !Number.isFinite(unitPrice)) {
     return NextResponse.json({ error: "Invalid product pricing." }, { status: 400 });
+  }
+
+  const fraudCheck = await validateSeonFraud({
+    email,
+    ip: clientIp,
+    session: payload.seonSession ?? null,
+    amount: unitPrice * sanitizedQuantity,
+    currency: "USD",
+    isLoggedIn: session.valid,
+  });
+
+  if (!fraudCheck.allowed) {
+    return NextResponse.json({ error: fraudCheck.reason ?? "Order declined." }, { status: 400 });
   }
 
   const orderPayload: CreateOrderPayload = {
