@@ -137,6 +137,8 @@ export async function POST(request: NextRequest) {
               });
               return fallbackCustomer;
             }
+            debugLog("[checkout] proceeding as guest", { email });
+            return null;
           }
           throw error;
         }
@@ -191,7 +193,7 @@ export async function POST(request: NextRequest) {
   }
 
   const orderPayload: CreateOrderPayload = {
-    customer_id: customer.id,
+    customer_id: customer?.id,
     line_items: [
       {
         product_id: productId,
