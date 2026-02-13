@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { debugLog } from "@/lib/debug";
 import { getOrderById, updateOrder } from "@/lib/woocommerce";
 
 /**
@@ -42,7 +43,7 @@ type BridgerWebhookPayload = {
 export async function POST(request: NextRequest) {
   // Log the incoming request
   const rawBody = await request.text();
-  console.log("[WEBHOOK::Orders] Incoming request", {
+  debugLog("[WEBHOOK::Orders] Incoming request", {
     method: request.method,
     url: request.url,
     headers: Object.fromEntries(request.headers),
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
   })();
 
-  console.log("[WEBHOOK::Orders] Parsed payload", {
+  debugLog("[WEBHOOK::Orders] Parsed payload", {
     hasPayload: Boolean(payload),
     webhookType: payload?.webhook?.type,
     chargeType: payload?.data?.charge?.type,
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
   const mappedStatus = statusMap[normalizedStatus];
   const orderId = Number(payload.data?.order_id ?? "");
 
-  console.log("[WEBHOOK::Orders] Status mapping", {
+  debugLog("[WEBHOOK::Orders] Status mapping", {
     rawStatus,
     normalizedStatus,
     mappedStatus,
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
       .filter((value) => Number.isFinite(value) && value > 0);
     const targetOrderIds = relatedOrderIds.length ? relatedOrderIds : [orderId];
 
-    console.log("[WEBHOOK::Orders] Target order ids", {
+    debugLog("[WEBHOOK::Orders] Target order ids", {
       primaryOrderId: orderId,
       relatedOrderIds,
       targetOrderIds,
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
       ],
     };
 
-    console.log("[WEBHOOK::Orders] Update payload", {
+    debugLog("[WEBHOOK::Orders] Update payload", {
       updatePayload,
       targetOrderIds,
     });
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
       targetOrderIds.map((id) => updateOrder(id, updatePayload))
     );
 
-    console.log("[WEBHOOK::Orders] Orders updated", {
+    debugLog("[WEBHOOK::Orders] Orders updated", {
       updatedOrderIds: updatedOrders.map((order) => order?.id ?? null),
       count: updatedOrders.length,
     });
