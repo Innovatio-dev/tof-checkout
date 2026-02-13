@@ -15,6 +15,7 @@ import { createOrderAccessToken, SESSION_COOKIE_NAME, verifySessionCookie } from
 import { canStackCoupons, type StackableCoupon } from "@/lib/topone/coupon-stacking";
 import { validateSeonFraud } from "@/lib/topone/seon";
 import { syncActiveCampaignContact } from "@/lib/topone/activecampaign";
+import { debugLog } from "@/lib/debug";
 
 type CheckoutPayload = {
   email?: string;
@@ -109,11 +110,37 @@ export async function POST(request: NextRequest) {
     },
   };
   const existingCustomer = existingCustomers[0] ?? (await getUserByEmail(email));
+  debugLog("[checkout] customer lookup", {
+    email,
+    existingCustomerId: existingCustomer?.id ?? null,
+    sessionValid: session.valid,
+  });
   const customer = existingCustomer
     ? session.valid && session.email.trim().toLowerCase() === email
       ? await updateCustomer(existingCustomer.id, customerPayload)
       : existingCustomer
-    : await createCustomer(customerPayload);
+    : await (async () => {
+        try {
+          return await createCustomer(customerPayload);
+        } catch (error) {
+          const errorCode = (error as { response?: { data?: { code?: string } } })?.response?.data?.code;
+          debugLog("[checkout] createCustomer failed", {
+            email,
+            errorCode: errorCode ?? null,
+          });
+          if (errorCode === "registration-error-email-exists") {
+            const fallbackCustomer = await getUserByEmail(email);
+            if (fallbackCustomer) {
+              debugLog("[checkout] using fallback customer", {
+                email,
+                fallbackCustomerId: fallbackCustomer.id,
+              });
+              return fallbackCustomer;
+            }
+          }
+          throw error;
+        }
+      })();
 
   const productId = payload.wooProductId;
   if (!productId || !Number.isFinite(productId)) {
@@ -214,6 +241,11 @@ export async function POST(request: NextRequest) {
         productId,
         total: runningTotal,
       });
+      debugLog("[checkout] coupon validation", {
+        code,
+        valid: validation.valid,
+        reason: validation.reason ?? null,
+      });
       if (!validation.valid || !validation.coupon) {
         return NextResponse.json({ error: validation.reason ?? "Invalid coupon." }, { status: 400 });
       }
@@ -249,9 +281,14 @@ export async function POST(request: NextRequest) {
   try {
     for (let index = 0; index < sanitizedQuantity; index += 1) {
       const order = await createOrder(orderPayload);
+      debugLog("[checkout] order created", { orderId: order.id, index });
       orderIds.push(order.id);
     }
   } catch (error) {
+    debugLog("[checkout] createOrder failed", {
+      email,
+      errorMessage: (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? null,
+    });
     const message =
       (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
       (error instanceof Error ? error.message : null) ??
