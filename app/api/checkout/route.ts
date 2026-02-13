@@ -4,6 +4,7 @@ import {
   createCustomer,
   createOrder,
   getCustomersByEmail,
+  getUserByEmail,
   updateOrder,
   updateCustomer,
   type CreateOrderPayload,
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
       country: payload.countryCode,
     },
   };
-  const existingCustomer = existingCustomers[0];
+  const existingCustomer = existingCustomers[0] ?? (await getUserByEmail(email));
   const customer = existingCustomer
     ? session.valid && session.email.trim().toLowerCase() === email
       ? await updateCustomer(existingCustomer.id, customerPayload)
