@@ -61,6 +61,16 @@ export async function POST(request: NextRequest) {
     }
   })();
 
+  console.log("[WEBHOOK::Orders] Parsed payload", {
+    hasPayload: Boolean(payload),
+    webhookType: payload?.webhook?.type,
+    chargeType: payload?.data?.charge?.type,
+    orderId: payload?.data?.order_id,
+    chargeId: payload?.data?.charge?.id,
+    chargeUuid: payload?.data?.charge?.uuid,
+    pspName: payload?.data?.psp_name,
+  });
+
   if (!payload) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
@@ -69,6 +79,13 @@ export async function POST(request: NextRequest) {
   const normalizedStatus = rawStatus.trim().toLowerCase();
   const mappedStatus = statusMap[normalizedStatus];
   const orderId = Number(payload.data?.order_id ?? "");
+
+  console.log("[WEBHOOK::Orders] Status mapping", {
+    rawStatus,
+    normalizedStatus,
+    mappedStatus,
+    orderId,
+  });
 
   if (!Number.isFinite(orderId)) {
     return NextResponse.json({ error: "Missing order_id." }, { status: 400 });
@@ -90,6 +107,13 @@ export async function POST(request: NextRequest) {
       .filter((value) => Number.isFinite(value));
     const targetOrderIds = relatedOrderIds.length ? relatedOrderIds : [orderId];
 
+    console.log("[WEBHOOK::Orders] Target order ids", {
+      primaryOrderId: orderId,
+      relatedOrderIds,
+      targetOrderIds,
+      bridgerpayOrderIdsMeta: orderIdMeta?.value ?? null,
+    });
+
     const updatePayload = {
       status: mappedStatus.status,
       set_paid: mappedStatus.setPaid,
@@ -103,9 +127,19 @@ export async function POST(request: NextRequest) {
       ],
     };
 
+    console.log("[WEBHOOK::Orders] Update payload", {
+      updatePayload,
+      targetOrderIds,
+    });
+
     const updatedOrders = await Promise.all(
       targetOrderIds.map((id) => updateOrder(id, updatePayload))
     );
+
+    console.log("[WEBHOOK::Orders] Orders updated", {
+      updatedOrderIds: updatedOrders.map((order) => order?.id ?? null),
+      count: updatedOrders.length,
+    });
 
     return NextResponse.json({ received: true, orders: updatedOrders });
   } catch (error) {
