@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     const relatedOrderIds = String(orderIdMeta?.value ?? "")
       .split(",")
       .map((value) => Number(value.trim()))
-      .filter((value) => Number.isFinite(value));
+      .filter((value) => Number.isFinite(value) && value > 0);
     const targetOrderIds = relatedOrderIds.length ? relatedOrderIds : [orderId];
 
     console.log("[WEBHOOK::Orders] Target order ids", {
